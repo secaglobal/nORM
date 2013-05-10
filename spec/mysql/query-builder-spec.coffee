@@ -89,6 +89,6 @@ describe '@QueryBuilder', () ->
       @builder.insertRows ['state', 'status'], [1, 2], [2, 3], [3, 4]
 
       @builder.compose()
-        .should.equal "insert into `Test`(`state`,`status`) values(1,2),(2,3),(3,4)"
+        .should.equal "insert into `Test`(`state`,`status`) values('1','2'),('2','3'),('3','4')"
 
 

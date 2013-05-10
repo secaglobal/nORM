@@ -6,7 +6,7 @@ class QueryBuilder
   @TYPE__UPDATE = 'Update'
   @TYPE__DELETE = 'Delete'
 
-  @_operators =
+  @_comparisonOperators =
     $eq: '=',
     $ne: '!=',
     $gt: '>',
@@ -16,9 +16,11 @@ class QueryBuilder
     $in: ' in',
     $nin: ' not in',
 
-  @_connectors =
+  @_logicalOperators =
     $or: 'or',
-    $and: 'and'
+    $and: 'and',
+    $not: '!',
+    $nor: ''
 
   constructor:(@_type) ->
     @
@@ -50,12 +52,12 @@ class QueryBuilder
     "update `#{@_table}` set #{valuesRep}#{@_composeWhereClouse()}"
 
   _composeDelete: () ->
-    valuesRep = ("`#{n}`=#{QueryBuilder._escape(v)}" for n, v of @_newValues).join(',')
-
     "delete from `#{@_table}`#{@_composeWhereClouse()}"
 
   _composeInsert: () ->
-    ''
+    fields = (QueryBuilder._escapeField(field)for field in @_insertFields).join(',')
+    values = (QueryBuilder._escape(set) for set in @_insertValues).join(',')
+    "insert into `#{@_table}`(#{fields}) values#{values}"
 
   _composeWhereClouse: () ->
     whereClouse = ''
@@ -67,20 +69,16 @@ class QueryBuilder
     (QueryBuilder._convertFilter(filter, value) for filter, value of filters).join(' and ')
 
   @_convertFilter: (filter, value) ->
-    isOperator = !!@_operators[filter] # RETURN WITHOUT FILTER
-    operator = if isOperator then @_operators[filter] else '='
-
-    #console.log filter, filter in QueryBuilder._operators
+    isOperator = !!@_comparisonOperators[filter] # RETURN WITHOUT FILTER
+    operator = if isOperator then @_comparisonOperators[filter] else '='
 
     if Utils.isHashMap(value)
-      return "`#{filter}`#{QueryBuilder._convertFilters(value)}"
+      return "#{QueryBuilder._escapeField(filter)}#{QueryBuilder._convertFilters(value)}"
 
     filter = '' if isOperator
-    filter = "`#{filter}`" if filter.length
     operator = ' is ' if value is null
-    value = QueryBuilder._escape(value)
 
-    return filter + operator + value
+    return QueryBuilder._escapeField(filter) + operator + QueryBuilder._escape(value)
 
   @_escape: (value) ->
     #TODO prepare real escape
@@ -92,5 +90,9 @@ class QueryBuilder
       return "'#{value.toString().replace(/\\/g, '\\\\').replace(/['"]/g, '\\\'')}'"
     else
       return 'null'
+
+  @_escapeField: (field) ->
+    field = field.replace /[^\w\.]/g, ''
+    if not field.length or /\./.test field then field else "`#{field}`"
 
 module.exports = QueryBuilder;

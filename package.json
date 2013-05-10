@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node app.js",
-    "test": "node node_modules/mocha/bin/mocha --compilers coffee:coffee-script --recursive spec/helper.coffee spec"
+    "test": "node node_modules/mocha/bin/mocha --compilers coffee:coffee-script --recursive --reporter spec spec/helper.coffee spec"
   },
   "dependencies": {
     "express": "3.2.1",
