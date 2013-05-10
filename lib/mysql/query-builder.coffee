@@ -1,3 +1,5 @@
+Utils = require '../util'
+
 class QueryBuilder
   @TYPE__SELECT = 'Select'
   @TYPE__INSERT = 'Insert'
@@ -35,34 +37,39 @@ class QueryBuilder
 
   composeSelect: () ->
     whereClouse = ''
-    whereClouse = (QueryBuilder.convertFilters @filters) if @filters
+    whereClouse = (QueryBuilder._convertFilters @filters) if @filters
     whereClouse = " where #{whereClouse}" if whereClouse.length
 
-    "select * from #{@table}#{whereClouse}"
+    "select * from `#{@table}`#{whereClouse}"
 
-  @convertFilters: (filters) ->
-    (QueryBuilder.convertFilter(filter, value) for filter, value of filters).join(',')
+  @_convertFilters: (filters) ->
+    (QueryBuilder._convertFilter(filter, value) for filter, value of filters).join(' and ')
 
-  @convertFilter: (filter, value) ->
-    isOperator = !!@_operators[filter] # WITHOUT FILTER
-    operator = @_operators[filter] || '='
+  @_convertFilter: (filter, value) ->
+    isOperator = !!@_operators[filter] # RETURN WITHOUT FILTER
+    operator = if isOperator then @_operators[filter] else '='
 
     #console.log filter, filter in QueryBuilder._operators
 
-    if value? and typeof value is 'object'
-      return "#{filter}#{QueryBuilder.convertFilters(value)}"
+    if Utils.isHashMap(value)
+      return "`#{filter}`#{QueryBuilder._convertFilters(value)}"
 
     filter = '' if isOperator
+    filter = "`#{filter}`" if filter.length
     operator = ' is ' if value is null
-    value = QueryBuilder.escape(value)
+    value = QueryBuilder._escape(value)
 
     return filter + operator + value
 
-  @escape: (value) ->
+  @_escape: (value) ->
     #TODO prepare real escape
-    if value?
-      value = "'#{value.toString().replace(/\\/g, '\\\\').replace(/'/g, '\\\'')}'"
+    if Utils.isArray(value)
+      return '(' + value.map (v) ->
+        QueryBuilder._escape v
+      .join(',') + ')'
+    else if value?
+      return "'#{value.toString().replace(/\\/g, '\\\\').replace(/'/g, '\\\'')}'"
     else
-      value = 'null'
+      return 'null'
 
 module.exports = QueryBuilder;
