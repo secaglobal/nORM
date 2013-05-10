@@ -20,27 +20,48 @@ class QueryBuilder
     $or: 'or',
     $and: 'and'
 
-  constructor:(@type) ->
+  constructor:(@_type) ->
     @
 
-  setType: (@type) ->
+  setType: (@_type) ->
     @
 
-  setTable: (@table) ->
+  setTable: (@_table) ->
     @
 
-  setFilters: (@filters) ->
+  setFilters: (@_filters) ->
+    @
+
+  updateFields: (@_newValues) ->
+    @
+
+  insertRows: (@_insertFields, @_insertValues...) ->
     @
 
   compose: () ->
-    @["compose#{@type}"]()
+    @["_compose#{@_type}"]()
 
-  composeSelect: () ->
+  _composeSelect: () ->
+    "select * from `#{@_table}`#{@_composeWhereClouse()}"
+
+  _composeUpdate: () ->
+    valuesRep = ("`#{n}`=#{QueryBuilder._escape(v)}" for n, v of @_newValues).join(',')
+
+    "update `#{@_table}` set #{valuesRep}#{@_composeWhereClouse()}"
+
+  _composeDelete: () ->
+    valuesRep = ("`#{n}`=#{QueryBuilder._escape(v)}" for n, v of @_newValues).join(',')
+
+    "delete from `#{@_table}`#{@_composeWhereClouse()}"
+
+  _composeInsert: () ->
+    ''
+
+  _composeWhereClouse: () ->
     whereClouse = ''
-    whereClouse = (QueryBuilder._convertFilters @filters) if @filters
+    whereClouse = (QueryBuilder._convertFilters @_filters) if @_filters
     whereClouse = " where #{whereClouse}" if whereClouse.length
-
-    "select * from `#{@table}`#{whereClouse}"
+    return whereClouse
 
   @_convertFilters: (filters) ->
     (QueryBuilder._convertFilter(filter, value) for filter, value of filters).join(' and ')
@@ -68,7 +89,7 @@ class QueryBuilder
         QueryBuilder._escape v
       .join(',') + ')'
     else if value?
-      return "'#{value.toString().replace(/\\/g, '\\\\').replace(/'/g, '\\\'')}'"
+      return "'#{value.toString().replace(/\\/g, '\\\\').replace(/['"]/g, '\\\'')}'"
     else
       return 'null'
 
