@@ -1,3 +1,4 @@
+Model = require './model'
 class DataProvider
   proxies: {}
 
@@ -5,7 +6,10 @@ class DataProvider
     @proxies[alias] = proxy
     @
 
-  getProxy: (alias)->
-    @proxies[alias]
+  getProxy: (alias) ->
+    @proxies[ if alias? and alias.getProxyAlias then alias.getProxyAlias() else alias ]
+
+  createRequest: (model) ->
+    @getProxy(model).createDataRequest model
 
 module.exports = new DataProvider;

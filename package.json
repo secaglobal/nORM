@@ -11,6 +11,8 @@
     "jade": "*",
     "stylus": "*",
     "coffee-script": "*",
+    "mysql": "*",
+
     "sinon": "*",
     "mocha": "*",
     "chai": "*"

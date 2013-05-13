@@ -3,7 +3,7 @@ Builder = require("#{LIBS_PATH}/mysql/query-builder");
 
 chai.should()
 
-describe '@QueryBuilder', () ->
+describe '@Mysql.QueryBuilder', () ->
   beforeEach ()->
     @builder = new Builder();
     @builder.setType(Builder.TYPE__SELECT).setTable('Test')
