@@ -12,7 +12,9 @@
     "stylus": "*",
     "coffee-script": "*",
     "mysql": "*",
-
+    "q": "*",
+    "backbone": "*",
+    "underscore": "*",
     "sinon": "*",
     "mocha": "*",
     "chai": "*"

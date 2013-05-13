@@ -1,6 +1,7 @@
 DBProxy = require '../db-proxy'
 DataRequest = require './data-request'
 Mysql = require 'mysql'
+Q = require 'q'
 
 class MysqlProxy extends DBProxy
   _readConnections: []
@@ -9,7 +10,14 @@ class MysqlProxy extends DBProxy
     new DataRequest(this)
 
   perform: (query)->
-    ""
+    deferred = Q.defer()
+    conn = @getReadConnection() if /^\s*select/.test query
+    conn = @getWriteConnection() if not conn?
+
+    conn.query query, (err, rows, fields) ->
+      if err then deferred.reject(err) else deferred.resolve(rows, fields)
+
+    deferred
 
   getReadConnection: () ->
     if not @_readConnections[0]?
