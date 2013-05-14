@@ -44,7 +44,7 @@ describe '@Mysql.Proxy', () ->
 
     it 'should returns promise for interaction with result', () ->
       query = 'select * from Test where id = 1'
-      expect(@proxy.perform(query)).to.be.instanceof Q.defer().constructor
+      expect(@proxy.perform(query)).to.be.instanceof Q.defer().promise.constructor
 
   describe '#getReadConnection', () ->
     it 'should return read connection to mysql', () ->

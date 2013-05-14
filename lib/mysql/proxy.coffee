@@ -17,7 +17,7 @@ class MysqlProxy extends DBProxy
     conn.query query, (err, rows, fields) ->
       if err then deferred.reject(err) else deferred.resolve(rows, fields)
 
-    deferred
+    deferred.promise
 
   getReadConnection: () ->
     if not @_readConnections[0]?

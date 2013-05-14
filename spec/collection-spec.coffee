@@ -3,6 +3,7 @@ sinon = require 'sinon'
 Model = require "#{LIBS_PATH}/model"
 Collection = require "#{LIBS_PATH}/collection"
 MysqlProxy = require "#{LIBS_PATH}/mysql/proxy"
+Q = require 'q'
 
 dataProvider = require("#{LIBS_PATH}/data-provider")
 chai.should()
@@ -17,8 +18,8 @@ describe '@Collection', () ->
 
   beforeEach () ->
     @collection = new Collection [], {model: TestModel}
-    console.log @collection.getRequest()
-    sinon.stub(@collection.getRequest(), 'find').returns [{id: 1}]
+    @deferred = Q.defer()
+    sinon.stub(@collection.getRequest(), 'find').returns @deferred.promise
 
 
   afterEach () ->
@@ -31,9 +32,12 @@ describe '@Collection', () ->
       @collection.getRequest().find.calledWith(TestModel).should.be.ok
 
     it 'should return @DataRequest#find result', () ->
-      expect(@collection.load()).to.be.deep.equal [{id: 1}]
+      expect(@collection.load()).to.be.deep.equal @deferred.promise
 
-    it 'should fill collection with received models'
+    it 'should fill collection with received models', () ->
+      @collection.load()
+      @deferred.resolve([{id: 4}])
+      @collection.length.should.be.equal 1
 
   describe '#save', () ->
     it 'should save all changed models'

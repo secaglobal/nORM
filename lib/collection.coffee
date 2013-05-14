@@ -9,7 +9,9 @@ class Collection extends Backbone.Collection
     @_request
 
   load: () ->
-    @_request.find(@model)
+    _ = @
+    @_request.find(@model).then () ->
+      console.log(arguments)
 
 
 module.exports = Collection;
