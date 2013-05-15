@@ -43,7 +43,7 @@ class MysqlQueryBuilder
   updateFields: (@_newValues) ->
     @
 
-  insertRows: (@_insertFields, @_insertValues...) ->
+  insertRows: (@_insertFields, @_insertValues) ->
     @
 
   compose: () ->

@@ -10,8 +10,16 @@ class Collection extends Backbone.Collection
 
   load: () ->
     _ = @
-    @_request.find(@model).then () ->
-      console.log(arguments)
+    @_request.find(@model).then (rows)->
+      _.reset rows
+
+  save: () ->
+    @_request.save(@models)
+
+  delete: () ->
+    _ = @
+    @_request.delete(@models).then ()->
+      _.reset([])
 
 
 module.exports = Collection;

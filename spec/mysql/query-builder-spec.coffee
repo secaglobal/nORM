@@ -86,7 +86,7 @@ describe '@Mysql.QueryBuilder', () ->
 
     it 'should compose insert queries', () ->
       @builder.setType Builder.TYPE__INSERT
-      @builder.insertRows ['state', 'status'], [1, 2], [2, 3], [3, 4]
+      @builder.insertRows ['state', 'status'], [[1, 2], [2, 3], [3, 4]]
 
       @builder.compose()
         .should.equal "insert into `Test`(`state`,`status`) values('1','2'),('2','3'),('3','4')"
