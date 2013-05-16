@@ -24,7 +24,7 @@ describe '@DBDataRequest', () ->
     @queryBuilder = new MysqlQueryBuilder()
 
     @models = new Collection(
-      [{id:4, name: 'jako'},{name: 'mona'}, {id: 5, name: 'fill'}],
+      [{id:4, name: 'jako'},{name: 'mona'},{name: 'mona2'}, {name: 'mona3', age: 30}, {id: 5, name: 'fill'}],
       {model: TestModel}
     ).models
 

@@ -34,6 +34,9 @@ class MysqlQueryBuilder
   setFilters: (@_filters) ->
     @
 
+  setFields: (@_fields) ->
+    @
+
   setLimit: (@_limit) ->
     @
 
@@ -44,7 +47,7 @@ class MysqlQueryBuilder
     @_type = MysqlQueryBuilder.TYPE__UPDATE
     @
 
-  insertRows: (@_insertFields, @_insertValues) ->
+  insertValues: (@_insertValues) ->
     @_type = MysqlQueryBuilder.TYPE__INSERT
     @
 

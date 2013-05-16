@@ -84,7 +84,7 @@ describe '@Mysql.QueryBuilder', () ->
         .should.equal "delete from `Test` where `id`='4' and `date`>'2010-12-12'"
 
     it 'should compose insert queries', () ->
-      @builder.insertRows ['state', 'status'], [[1, 2], [2, 3], [3, 4]]
+      @builder.setFields(['state', 'status']).insertValues([[1, 2], [2, 3], [3, 4]])
 
       @builder.compose()
         .should.equal "insert into `Test`(`state`,`status`) values('1','2'),('2','3'),('3','4')"
