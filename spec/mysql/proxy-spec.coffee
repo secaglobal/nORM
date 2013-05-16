@@ -1,12 +1,7 @@
-chai = require 'chai'
-sinon = require 'sinon'
 DataRequest = require("#{LIBS_PATH}/mysql/data-request");
 Proxy = require("#{LIBS_PATH}/mysql/proxy");
 Model = require("#{LIBS_PATH}/model");
 Q = require 'q'
-
-chai.should()
-expect = chai.expect
 
 describe '@Mysql.Proxy', () ->
   beforeEach () ->

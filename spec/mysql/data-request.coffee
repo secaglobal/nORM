@@ -5,9 +5,6 @@ MysqlProxy = require "#{LIBS_PATH}/mysql/proxy"
 Request = require "#{LIBS_PATH}/mysql/data-request"
 Q = require 'q'
 
-chai.should()
-expect = chai.expect
-
 class User extends Model
   @TABLE: 'User'
 

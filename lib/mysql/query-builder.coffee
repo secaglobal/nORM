@@ -66,7 +66,7 @@ class MysqlQueryBuilder
     "delete from `#{@_table}`#{@_composeWhereClouse()}"
 
   _composeInsert: () ->
-    fields = (MysqlQueryBuilder._escapeField(field)for field in @_insertFields).join(',')
+    fields = (MysqlQueryBuilder._escapeField(field)for field in @_fields).join(',')
     values = (MysqlQueryBuilder._escape(set) for set in @_insertValues).join(',')
     "insert into `#{@_table}`(#{fields}) values#{values}"
 

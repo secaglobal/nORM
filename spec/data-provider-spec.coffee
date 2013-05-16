@@ -1,4 +1,3 @@
-chai = require 'chai'
 Provider = require("#{LIBS_PATH}/data-provider");
 Proxy = require("#{LIBS_PATH}/mysql/proxy");
 MysqlDataRequest = require("#{LIBS_PATH}/mysql/data-request");
@@ -6,8 +5,6 @@ Model = require("#{LIBS_PATH}/model");
 
 class TestModel extends Model
   @PROXY_ALIAS: 'test2'
-
-chai.should()
 
 describe '@DataProvider', () ->
   beforeEach () ->

@@ -1,7 +1,5 @@
-chai = require 'chai'
 Builder = require("#{LIBS_PATH}/mysql/query-builder");
 
-chai.should()
 
 describe '@Mysql.QueryBuilder', () ->
   beforeEach ()->

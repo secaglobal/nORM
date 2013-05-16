@@ -1,13 +1,9 @@
-chai = require 'chai'
-sinon = require 'sinon'
 Model = require "#{LIBS_PATH}/model"
 Collection = require "#{LIBS_PATH}/collection"
 MysqlProxy = require "#{LIBS_PATH}/mysql/proxy"
 Q = require 'q'
 
 dataProvider = require("#{LIBS_PATH}/data-provider")
-chai.should()
-expect = chai.expect
 
 class TestModel extends Model
   @PROXY_ALIAS: 'testProxy'
