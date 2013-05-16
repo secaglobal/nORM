@@ -6,7 +6,7 @@ chai.should()
 describe '@Mysql.QueryBuilder', () ->
   beforeEach ()->
     @builder = new Builder();
-    @builder.setType(Builder.TYPE__SELECT).setTable('Test')
+    @builder.setTable('Test')
 
   describe '#setTable', () ->
     it 'should set appropriate table', () ->
@@ -62,7 +62,6 @@ describe '@Mysql.QueryBuilder', () ->
       @builder.compose().should.equal 'select * from `Test`'
 
     it 'should compose update queries', () ->
-      @builder.setType Builder.TYPE__UPDATE
       @builder.updateFields
           state: 1,
           status: 2
@@ -85,7 +84,6 @@ describe '@Mysql.QueryBuilder', () ->
         .should.equal "delete from `Test` where `id`='4' and `date`>'2010-12-12'"
 
     it 'should compose insert queries', () ->
-      @builder.setType Builder.TYPE__INSERT
       @builder.insertRows ['state', 'status'], [[1, 2], [2, 3], [3, 4]]
 
       @builder.compose()

@@ -22,7 +22,7 @@ class MysqlQueryBuilder
     $not: '!',
     $nor: ''
 
-  constructor:(@_type) ->
+  constructor:(@_type = MysqlQueryBuilder.TYPE__SELECT) ->
     @
 
   setType: (@_type) ->
@@ -41,9 +41,11 @@ class MysqlQueryBuilder
     @
 
   updateFields: (@_newValues) ->
+    @_type = MysqlQueryBuilder.TYPE__UPDATE
     @
 
   insertRows: (@_insertFields, @_insertValues) ->
+    @_type = MysqlQueryBuilder.TYPE__INSERT
     @
 
   compose: () ->
