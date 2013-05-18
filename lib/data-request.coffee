@@ -1,26 +1,26 @@
 class DataRequest
-  constructor: (@_proxy) ->
+    constructor: (@_proxy) ->
 
-  getProxy: () ->
-    @_proxy
+    getProxy: () ->
+        @_proxy
 
-  setFilters: (@_filters) ->
-    @
+    setFilters: (@_filters) ->
+        @
 
-  setLimit: (@_limit) ->
-    @
+    setLimit: (@_limit) ->
+        @
 
-  setOrder: (@_order) ->
-    @
+    setOrder: (@_order) ->
+        @
 
-  find: (model) ->
-    throw 'Not implemented yet'
+    find: (model) ->
+        throw 'Not implemented yet'
 
-  save: (models) ->
-    throw 'Not implemented yet'
+    save: (models) ->
+        throw 'Not implemented yet'
 
-  delete: (models) ->
-    throw 'Not implemented yet'
+    delete: (models) ->
+        throw 'Not implemented yet'
 
 
 module.exports = DataRequest;

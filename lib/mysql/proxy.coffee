@@ -4,32 +4,32 @@ Mysql = require 'mysql'
 Q = require 'q'
 
 class MysqlProxy extends DBProxy
-  _readConnections: []
+    _readConnections: []
 
-  createDataRequest: () ->
-    new DataRequest(this)
+    createDataRequest: () ->
+        new DataRequest(this)
 
-  perform: (query)->
-    deferred = Q.defer()
-    conn = @getReadConnection() if /^\s*select/.test query
-    conn = @getWriteConnection() if not conn?
+    perform: (query)->
+        deferred = Q.defer()
+        conn = @getReadConnection() if /^\s*select/.test query
+        conn = @getWriteConnection() if not conn?
 
-    conn.query query, (err, rows, fields) ->
-      if err then deferred.reject(err) else deferred.resolve(rows, fields)
+        conn.query query, (err, rows, fields) ->
+            if err then deferred.reject(err) else deferred.resolve(rows, fields)
 
-    deferred.promise
+        deferred.promise
 
-  getReadConnection: () ->
-    if not @_readConnections[0]?
-      @_readConnections[0] = @_createConnection()
-    @_readConnections[0]
+    getReadConnection: () ->
+        if not @_readConnections[0]?
+            @_readConnections[0] = @_createConnection()
+        @_readConnections[0]
 
-  getWriteConnection: () ->
-    if not @_writeConnection?
-      @_writeConnection = @_createConnection()
-    @_writeConnection
+    getWriteConnection: () ->
+        if not @_writeConnection?
+            @_writeConnection = @_createConnection()
+        @_writeConnection
 
-  _createConnection: () ->
-    Mysql.createConnection(@_config)
+    _createConnection: () ->
+        Mysql.createConnection(@_config)
 
 module.exports = MysqlProxy

@@ -1,23 +1,30 @@
 Model = require("#{LIBS_PATH}/model");
+dataProvider = require("#{LIBS_PATH}/data-provider");
 
 class DefaultModel extends Model
 
 class RedefinedModel extends DefaultModel
-  @PROXY_ALIAS: 'second'
+    @PROXY_ALIAS: 'test1'
 
 describe '@Model', () ->
-  beforeEach () ->
-    @defaultModel = new DefaultModel
-    @redefinedModel = new RedefinedModel
+    beforeEach () ->
+#    @proxy = new Proxy({test1: true})
+#    dataProvider.registerProxy('test1', @proxy)
+#
+#    @model = new RedefinedModel
 
-  describe '#getProxyAlias', () ->
-    it 'should return default proxy alias', () ->
-      proxy = DefaultModel.getProxyAlias()
-      proxy.should.be.equal 'default'
 
-    it 'should return redefined proxy alias', () ->
-      proxy = RedefinedModel.getProxyAlias()
-      proxy.should.be.equal 'second'
+    describe '#getProxyAlias', () ->
+        it 'should return default proxy alias', () ->
+            proxy = DefaultModel.getProxyAlias()
+            proxy.should.be.equal 'default'
 
-  describe 'Relations', () ->
-    it 'prepare logic for interaction with relations'
+        it 'should return redefined proxy alias', () ->
+            proxy = RedefinedModel.getProxyAlias()
+            proxy.should.be.equal 'test1'
+
+#  describe '#belongsTo', () ->
+#    it 'should set up @DataRequest and execute perform', () ->
+#
+#    it 'should return promise'
+#    it 'should pass Model when request will be executed'
