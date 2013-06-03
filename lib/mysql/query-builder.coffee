@@ -18,9 +18,7 @@ class MysqlQueryBuilder
 
     @_logicalOperators =
         $or: 'or',
-        $and: 'and',
-        $not: '!',
-        $nor: ''
+        $and: 'and'
 
     constructor: (@_type = MysqlQueryBuilder.TYPE__SELECT) ->
         @
@@ -40,6 +38,9 @@ class MysqlQueryBuilder
     setLimit: (@_limit) ->
         @
 
+    setOffset: (@_offset) ->
+        @
+
     setOrder: (@_order) ->
         @
 
@@ -55,15 +56,15 @@ class MysqlQueryBuilder
         @["_compose#{@_type}"]()
 
     _composeSelect: () ->
-        "select * from `#{@_table}`#{@_composeWhereClouse()}"
+        "select * from `#{@_table}`#{@_composeWhereClouse()}#{@_composeOrderClouse()}#{@_composeLimitClouse()}#{@_composeOffsetClouse()}"
 
     _composeUpdate: () ->
         valuesRep = ("`#{n}`=#{MysqlQueryBuilder._escape(v)}" for n, v of @_newValues).join(',')
 
-        "update `#{@_table}` set #{valuesRep}#{@_composeWhereClouse()}"
+        "update `#{@_table}` set #{valuesRep}#{@_composeWhereClouse()}#{@_composeLimitClouse()}"
 
     _composeDelete: () ->
-        "delete from `#{@_table}`#{@_composeWhereClouse()}"
+        "delete from `#{@_table}`#{@_composeWhereClouse()}#{@_composeLimitClouse()}"
 
     _composeInsert: () ->
         fields = (MysqlQueryBuilder._escapeField(field)for field in @_fields).join(',')
@@ -76,12 +77,42 @@ class MysqlQueryBuilder
         whereClouse = " where #{whereClouse}" if whereClouse.length
         return whereClouse
 
-    @_convertFilters: (filters) ->
-        (@_convertFilter(filter,
-          value) for filter, value of filters).join(' and ')
+    _composeLimitClouse: () ->
+        if @_limit then " limit #{parseInt(@_limit)}" else ''
+
+    _composeOffsetClouse: () ->
+        if @_offset and @_limit then " offset #{parseInt(@_offset)}" else ''
+
+    _composeOrderClouse: () ->
+        res = ''
+
+        if @_order
+            parts = []
+            for field, order of @_order when order
+                cl = MysqlQueryBuilder._escapeField(field)
+                cl += ' desc' if order < 0
+                parts.push cl
+
+            res = ' order by ' + parts.join(',') if parts.length
+        return res
+
+    @_convertFilters: (filters, glue = 'and') ->
+        parts = []
+
+        for filter, value of filters
+            if @_logicalOperators[filter]
+                subexpressions = []
+                for expression in value
+                    subexpressions.push '(' + @_convertFilters(expression) + ')'
+                parts.push '(' + subexpressions.join(" #{@_logicalOperators[filter]} ") + ')';
+            else
+                parts.push @_convertFilter(filter, value)
+
+        parts.join " #{glue} "
 
     @_convertFilter: (filter, value) ->
         isOperator = !!@_comparisonOperators[filter]
+
         # RETURN WITHOUT FILTER
         operator = if isOperator then @_comparisonOperators[filter] else '='
 

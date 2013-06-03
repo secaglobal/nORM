@@ -7,22 +7,33 @@ Collection = require("#{LIBS_PATH}/collection");
 Q = require 'q'
 
 class FirstModel extends Model
-    @TABLE: 'FirstModel'
+    @TABLE: 'TargetTable'
     @PROXY_ALIAS: 'test1'
 
 class TestModel extends Model
-    @TABLE: 'TestModel'
+    @TABLE: 'TestTable'
     @PROXY_ALIAS: 'test2'
 
-    @belongsTo 'relation1', use: FirstModel, myKey: 'firstId'
-    @hasMany 'relation2', use: FirstModel, theirKey: 'testId'
+    @belongsTo 'relation1', use: FirstModel, myField: 'firstId'
+    @hasMany 'relation2', use: FirstModel, theirField: 'testId'
+    @hasAndBelongsToMany 'relation3', use: FirstModel
 
 describe '@DBDataRequest', () ->
+    assignPromise = () ->
+        if not @proxy.perform.restore
+            sinon.stub(@proxy, 'perform')
+
+        _ = @
+        @deferred = Q.defer()
+        promise = @deferred.promise
+        @proxy.perform.returns promise;
+        promise.then () ->
+            assignPromise.call _
+
     beforeEach () ->
         dataProvider.registerProxy('test1', new Proxy({test1: true}))
         dataProvider.registerProxy('test2', new Proxy({test2: true}))
 
-        @deferred = Q.defer()
         @proxy = dataProvider.getProxy TestModel
         @request = new MysqlDataRequest(@proxy)
         @queryBuilder = new MysqlQueryBuilder()
@@ -39,10 +50,10 @@ describe '@DBDataRequest', () ->
           {model: TestModel}
         ).models
 
-        sinon.stub(@proxy, 'perform').returns @deferred.promise;
+        assignPromise.call @
 
     afterEach: () ->
-        sinon.stub(@proxy, 'perform');
+        @proxy.perform.restore()
 
     describe '#find', () ->
         it 'should prepare query and execute via @DataProxy#query', () ->
@@ -74,18 +85,30 @@ describe '@DBDataRequest', () ->
                 ['mona'],
                 ['mona2']
             ]).compose()
+
             insertQuery2 = @queryBuilder.setTable(TestModel.TABLE).setFields(
               ['age', 'name']).insertValues([
                 [30, 'mona3']
             ]).compose()
 
-            @request.save @models
+            @request.save @models, false
 
             @proxy.perform.calledWith(insertQuery1).should.be.ok
             @proxy.perform.calledWith(insertQuery2).should.be.ok
 
-        it 'should set ids for new models'
+        it 'should set ids for new models', (done) ->
+            _ = @
+            @request.save(@models).then () ->
+                try
+                    col =  new Collection(_.models)
+                    col.where({id: undefined}).length.should.be.equal 0
+                    col.where({id: 142}).length.should.not.be.equal 0
 
+                    done()
+                catch e
+                    done e
+
+            @deferred.resolve({insertId: 142})
 
         it 'should return promise', () ->
             expect(@request.save @models).to.be.instanceof Q.allResolved(
@@ -148,7 +171,6 @@ describe '@DBDataRequest', () ->
 
             @request.fillOneToManyRelation @models, 'relation2'
 
-            console.log searchQuery, @proxy.perform.args
             @proxy.perform.calledWith(searchQuery).should.be.ok
 
         it 'should assign result to appropriate model', (done) ->
@@ -183,4 +205,77 @@ describe '@DBDataRequest', () ->
             expect(res).to.be.instanceof Q.defer().promise.constructor
 
     describe '#fillManyToManyRelation', () ->
-        it 'should be implemented next', () ->
+        it 'should search in crosstable', () ->
+            filters = {}
+            filters[TestModel.TABLE] = {$in: [4, 5, 7]}
+            searchQuery = @queryBuilder
+                .setTable(FirstModel.TABLE + '__' + TestModel.TABLE)
+                .setFilters(filters)
+                .compose()
+
+            @request.fillManyToManyRelation @models, 'relation3'
+
+            @proxy.perform.calledWith(searchQuery).should.be.ok
+
+        it 'should search in target table', (done) ->
+            _ = @
+            searchQuery = @queryBuilder
+                .setTable(FirstModel.TABLE)
+                .setFilters({id: {$in: [7, 8, 9, 10]}})
+                .compose()
+
+            @request.fillManyToManyRelation(@models, 'relation3')
+                .then () ->
+                    try
+                        _.proxy.perform.calledWith(searchQuery).should.be.ok
+                        done()
+                    catch e
+                        done(e)
+
+            @deferred.promise.then () ->
+                _.deferred.resolve [{id: 7}, {id: 8}, {id: 9}, {id: 10}]
+
+            @deferred.resolve [
+                {TestTable: 4, TargetTable: 7},
+                {TestTable: 4, TargetTable: 8},
+                {TestTable: 4, TargetTable: 9},
+                {TestTable: 7, TargetTable: 10},
+            ]
+
+        it 'should return promise', () ->
+            res = @request.fillManyToManyRelation(@models, 'relation3')
+            expect(res).to.be.instanceof Q.defer().promise.constructor
+
+        it 'should assign result to appropriate model', (done) ->
+            _ = @
+
+            @request.fillManyToManyRelation(@models, 'relation3').then () ->
+                try
+                    expect(_.models[0]._relationsCache.relation3).to.be.ok
+                    expect(_.models[0]._relationsCache.relation3.length).to.be.equal 3
+                    _.models[0]._relationsCache.relation3.first().get('id').should.equal 7
+                    _.models[0]._relationsCache.relation3.at(1).get('id').should.equal 8
+                    _.models[0]._relationsCache.relation3.at(2).get('id').should.equal 9
+
+                    expect(_.models[5]._relationsCache.relation3).to.be.ok
+                    expect(_.models[5]._relationsCache.relation3.length).to.be.equal 1
+                    _.models[5]._relationsCache.relation3.first().get('id').should.equal 10
+
+                    expect(_.models[4]._relationsCache.relation3).to.be.ok
+                    expect(_.models[4]._relationsCache.relation3.isEmpty()).to.be.ok
+
+                    done()
+                catch err
+                    done err
+
+            @deferred.promise.then () ->
+                _.deferred.resolve [{id: 7}, {id: 8}, {id: 9}, {id: 10}]
+
+            @deferred.resolve [
+                {TestTable: 4, TargetTable: 7},
+                {TestTable: 4, TargetTable: 8},
+                {TestTable: 4, TargetTable: 9},
+                {TestTable: 7, TargetTable: 10},
+            ]
+
+

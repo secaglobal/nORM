@@ -46,7 +46,7 @@ describe '@Mysql.QueryBuilder', () ->
             @builder.compose().should.equal \
                 "select * from `Test` where `name`='Liza' and `age` is null"
 
-        it 'should correctly bahave $in, $nin directives', () ->
+        it 'should correctly bahave with $in, $nin directives', () ->
             @builder.setFilters
                 name: {$eq: 'Liza'},
                 id: {$nin: [20, 30, 40, 50]}
@@ -54,6 +54,34 @@ describe '@Mysql.QueryBuilder', () ->
 
             @builder.compose().should.equal \
                 "select * from `Test` where `name`='Liza' and `id` not in('20','30','40','50') and `age` in('20','30')"
+
+        it 'should correctly bahave with $or and $and directives', () ->
+            @builder.setFilters
+              name: {$eq: 'Liza'},
+              $or: [
+                  {
+                    id: {$nin: [20, 30, 40, 50]}
+                  },
+                  {
+                      age: {$in: [20, 30]},
+                      type: 2
+                  }
+              ]
+
+            @builder.compose().should.equal \
+              "select * from `Test` where `name`='Liza' and ((`id` not in('20','30','40','50')) or (`age` in('20','30') and `type`='2'))"
+
+    describe '#setLimit', () ->
+        it 'should set limit clouse', () ->
+            @builder.setLimit(10).compose().should.equal "select * from `Test` limit 10"
+
+    describe '#setOffset', () ->
+        it 'should set offset clouse', () ->
+            @builder.setLimit(100).setOffset(10).compose().should.equal "select * from `Test` limit 100 offset 10"
+
+    describe '#setOrder', () ->
+        it 'should set order clouse', () ->
+            @builder.setOrder({id: 1, name: -1}).compose().should.equal "select * from `Test` order by `id`,`name` desc"
 
     describe '#compose', () ->
         it 'should compose select queries', () ->

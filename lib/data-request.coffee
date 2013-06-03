@@ -10,17 +10,20 @@ class DataRequest
     setLimit: (@_limit) ->
         @
 
+    setOffset: (@_offset) ->
+        @
+
     setOrder: (@_order) ->
         @
 
     find: (model) ->
-        throw 'Not implemented yet'
+        throw 'Absract method'
 
     save: (models) ->
-        throw 'Not implemented yet'
+        throw 'Absract method'
 
     delete: (models) ->
-        throw 'Not implemented yet'
+        throw 'Absract method'
 
 
 module.exports = DataRequest;
