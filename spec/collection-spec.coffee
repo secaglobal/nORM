@@ -57,7 +57,7 @@ describe '@Collection', () ->
                 {id: 4}
             ])
 
-        it 'should pass collection as first argument for resolved promise', () ->
+        it 'should pass collection as first argument for resolved promise', (done) ->
             _ = @
             @collection.load().then (col)->
                 try

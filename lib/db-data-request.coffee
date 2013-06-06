@@ -32,7 +32,6 @@ class DBDataRequest extends DataRequest
 
 
         Q.allResolved(promises).then (promises) ->
-            err = false
             promises.forEach (promise) ->
                 if not promise.isFulfilled()
                     deferred.reject promise.valueOf().exception

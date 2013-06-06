@@ -57,8 +57,7 @@ describe '@DBDataRequest', () ->
 
     describe '#find', () ->
         it 'should prepare query and execute via @DataProxy#query', () ->
-            @request.setFilters({id: 4, state:
-                {$ne: 5}}).find(TestModel)
+            @request.setFilters({id: 4, state: {$ne: 5}}).find(TestModel)
             @proxy.perform.called.should.be.ok
 
         it 'should return promise', () ->
@@ -81,9 +80,9 @@ describe '@DBDataRequest', () ->
 
         it 'should perfotm save for all new models', () ->
             insertQuery1 = @queryBuilder.setTable(TestModel.TABLE).setFields(
-              ['name']).insertValues([
-                ['mona'],
-                ['mona2']
+                ['name']).insertValues([
+                    ['mona'],
+                    ['mona2']
             ]).compose()
 
             insertQuery2 = @queryBuilder.setTable(TestModel.TABLE).setFields(
