@@ -1,33 +1,29 @@
-# Part = new Schema {},
-#   title: String
-
-# CatHasChild = new Schema {},
-#   parentId: Number
-#   childId: Number
-#   type: Number
-#   child: {type: Cat, field: childId}
-#   parent: {type: Cat, field: parentId}
-#
-# Cat = new Schema {table: 'Table', proxy: 'mongo'},
-#   title: String
-#   age: {type: Number, min: 100, default: 101}
-#   teacherId: Number
-#   childs: [{type: Cat, myltiple: true, throught: {type: CatHasChild, field:parentId, use: 'parent'}}]    #many to many
-#   parents: [{type: Cat, myltiple: true}                                                                  #many to many
-#   jobs: [Cat]                                                                                            #one to many
-#   teacher: Cat,                                                                                          #many to one
-#   parts: [Part]
-#
-
+_ = require 'underscore'
 
 class Schema
-    constructor: (@_options, @_structure) ->
+    fields: {id: {type: Number}}
 
-    isRelation: () ->
-        @
+    constructor: (@name, structure) ->
+        @_applyAttr attr, value for attr, value of structure
+
+    _applyAttr: (attr, value) ->
+
+        if attr is '_proxy'
+            @proxy = value
+        else if _.isArray(value)
+            if  _.isArray(value[0])
+                @fields[attr] = {type: value[0][0], m2m: true, collection: true}
+            else
+                @fields[attr] = {type: value[0], collection: true}
+        else if _.isFunction(value)
+            @fields[attr] = {type: value}
+        else
+            @fields[attr] = value
 
     getProxy: () ->
         @
 
     validate: () ->
         @
+
+module.exports = Schema

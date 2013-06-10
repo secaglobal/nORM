@@ -25,5 +25,8 @@ class DataRequest
     delete: (models) ->
         throw 'Absract method'
 
+    fillRelation: (models, relation) ->
+        throw 'Absract method'
+
 
 module.exports = DataRequest;

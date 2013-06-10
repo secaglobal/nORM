@@ -52,6 +52,9 @@ class DBDataRequest extends DataRequest
                 .setFilters({id: {$in: ids}})
                 .compose()
 
+    fillRelation: (models, relation) ->
+        @
+
     fillManyToOneRelation: (models, relation) ->
         models = new Collection(models) until models instanceof Collection
 

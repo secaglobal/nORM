@@ -1,44 +1,80 @@
-Backbone = require 'backbone'
 _ = require 'underscore'
+Q = require 'q'
+Util = require './util'
 DataProvider = require './data-provider'
-Model = require './model'
+Entity = require("./entity");
 
-class Collection extends Backbone.Collection
-    initialize: (models, config) ->
-        @model = models[0].constructor if models.length and models[0] instanceof Model
+class Collection extends Entity
+    constructor: (models, @config) ->
+        super()
+        @reset(models)
+        @_request = DataProvider.createRequest(@config.model)
 
-        if config
-            @_filters = config.filters
-            @_order = config.order
-            @_offset = config.offset
-            @_limit = config.limit
-
-        @_request = DataProvider.createRequest(@model) if @model
 
     getRequest: () ->
         @_request
 
-    setFilters: (@_filters) ->
+    setFilters: (filters) ->
+        @config.filters = filters
         @
 
-    setLimit: (@_limit) ->
+    setLimit: (limit) ->
+        @config.limit = limit
         @
 
-    setOffset: (@_offset) ->
+    setOffset: (offset) ->
+        @config.offset = offset
         @
 
-    setOrder: (@_order) ->
+    setOrder: (order) ->
+        @config.order = order
         @
+
+    reset: (@models) ->
+        for model, i in @models
+            @models[i] = new @config.model(model) if Util.isHashMap(model)
+        @refreshLength()
+        @
+
+    first: () ->
+        _.first(@models)
+
+    at: (nr) ->
+        @models[nr]
+
+    refreshLength: () ->
+        @length = @models.length
+        @
+
+    require: () ->
+        deferred = Q.defer()
+        fields = @config.model.schema.fields
+        promises = []
+
+        for field in arguments
+            if fields[field].type.prototype instanceof Entity
+                promises.push @_request.fillRelation(@models, field)
+
+        Q.allResolved(promises).then (promises) ->
+            promises.forEach (promise) ->
+                if not promise.isFulfilled()
+                    deferred.reject promise.valueOf().exception
+                return
+            deferred.resolve()
+
+        deferred.promise
+
+
 
     load: () ->
         _ = @
 
-        @_request.setFilters(@_filters) if @_filters
-        @_request.setLimit(@_limit) if @_limit
-        @_request.setOrder(@_order) if @_order
-        @_request.setOffset(@_offset) if @_offset
+        @_request.setFilters(@config.filters) if @config.filters
+        @_request.setLimit(@config.limit) if @config.limit
+        @_request.setOrder(@config.order) if @config.order
+        @_request.setOffset(@config.offset) if @config.offset
 
-        @_request.find(@model).then (rows)->
+        @_request.find(@config.model).then (rows)->
             _.reset rows
 
 
@@ -49,10 +85,10 @@ class Collection extends Backbone.Collection
         _ = @
         @_request.delete(@models).then ()->
             _.reset([])
-
-    keys: () ->
-        _.filter models.pluck('id'), (v) ->
-            v > 0
+#
+#    keys: () ->
+#        _.filter models.pluck('id'), (v) ->
+#            v > 0
 
 module.exports = Collection
 
