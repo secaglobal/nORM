@@ -12,4 +12,12 @@ dataProvider.registerProxy("default", new MysqlProxy(
     host      : 'localhost'
 ))
 
+dataProvider.registerProxy("test1", new MysqlProxy(
+    host      : 'localhost'
+))
+
+dataProvider.registerProxy("test2", new MysqlProxy(
+    host      : 'localhost'
+))
+
 

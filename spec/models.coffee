@@ -22,7 +22,8 @@ class Person extends Model
         jobId: Number,
         job: Job,
         tasks: [[Task]],
-        cars: [Car]
+        cars: [Car],
+        _proxy: 'test1'
 
 module.exports =
     Job: Job,
