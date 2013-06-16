@@ -1,12 +1,17 @@
-_ = require 'underscore'
+underscore = require 'underscore'
 Q = require 'q'
 Util = require './util'
 DataProvider = require './data-provider'
 Entity = require("./entity");
+IModel = require("./imodel");
 
 class Collection extends Entity
-    constructor: (models, @config) ->
+    constructor: (models, @config = {}) ->
         super()
+
+        if !@config.model and models.length and models[0] instanceof IModel
+            @config.model = models[0].self
+
         @reset(models)
         @_request = DataProvider.createRequest(@config.model)
 
@@ -32,15 +37,33 @@ class Collection extends Entity
 
     reset: (@models) ->
         for model, i in @models
-            @models[i] = new @config.model(model) if Util.isHashMap(model)
+            model = new @config.model(model) if not (model instanceof IModel)
+            model.collection = @
+            @models[i] = model
+
         @refreshLength()
         @
 
     first: () ->
-        _.first(@models)
+        underscore.first(@models)
 
     at: (nr) ->
         @models[nr]
+
+    where: (filter) ->
+        underscore.where(@models, filter)
+
+    findWhere: (filter) ->
+        underscore.findWhere(@models, filter)
+
+    pluck: (field) ->
+        underscore.pluck(@models, field)
+
+    isEmpty: () ->
+        underscore.isEmpty(@models)
+
+    forEach: (fn) ->
+        underscore.forEach(@models, fn)
 
     refreshLength: () ->
         @length = @models.length
@@ -52,7 +75,7 @@ class Collection extends Entity
         promises = []
 
         for field in arguments
-            if fields[field].type.prototype instanceof Entity
+            if fields[field].type.prototype instanceof IModel
                 promises.push @_request.fillRelation(@models, field)
 
         Q.allResolved(promises).then (promises) ->

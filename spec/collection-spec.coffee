@@ -58,6 +58,12 @@ describe '@Collection', () ->
             expect(@collection.first()).be.instanceof Person
             expect(@collection.at(1)).be.instanceof Person
 
+        it 'should set parent collection for model', () ->
+            @collection.reset [{name: 'A', age: 1}, {name: 'B', age: 2}]
+
+            expect(@collection.first().collection).be.equal @collection
+            expect(@collection.at(1).collection).be.equal @collection
+
     describe '#load', () ->
         it 'should request rows via model proxy', () ->
             @collection.load()

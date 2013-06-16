@@ -13,12 +13,13 @@ global.sinon = require 'sinon'
 
 
 dataProvider.registerProxy("default", new MysqlProxy(
-  host      : 'localhost',
-  user      : 'root',
-  password  : 'ramstein',
-  database  : 'norm_test',
-  charset   : 'utf8',
-  #debug        : true
+    host      : 'localhost',
+    user      : 'test',
+    password  : 'testpass',
+    database  : 'norm_test',
+    charset   : 'utf8',
+#    debug     : ['ComQueryPacket']
+#    debug     : ['ComQueryPacket', 'RowDataPacket']
 ))
 
 global.loadFixtures = (data) ->
@@ -58,5 +59,8 @@ global.loadFixtures = (data) ->
     return deferred.promise
 
 
-
+#require('nodetime').profile({
+#    accountKey: '5597448534f79fa6626fd6132cbc92e3d7cbad88',
+#    appName: 'Node.js Application'
+#});
 

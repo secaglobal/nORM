@@ -1,10 +1,14 @@
 _ = require 'underscore'
+Util = require './util'
+Model = require './model'
 
 class Schema
     fields: {id: {type: Number}}
+    keys: []
 
     constructor: (@name, structure) ->
         @_applyAttr attr, value for attr, value of structure
+        @defaultFieldName = Util.lcfirst(name) + 'Id'
 
     _applyAttr: (attr, value) ->
 
@@ -19,6 +23,9 @@ class Schema
             @fields[attr] = {type: value}
         else
             @fields[attr] = value
+
+        if not (@fields[attr] and @fields[attr].type.prototype instanceof Model)
+            @keys.push attr
 
     getProxy: () ->
         @

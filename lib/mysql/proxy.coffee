@@ -1,9 +1,9 @@
-DBProxy = require '../db-proxy'
+SQLProxy = require '../sql-proxy'
 DataRequest = require './data-request'
 Mysql = require 'mysql'
 Q = require 'q'
 
-class MysqlProxy extends DBProxy
+class MysqlProxy extends SQLProxy
     _readConnections: []
 
     createDataRequest: () ->

@@ -1,8 +1,8 @@
-DBDataRequest = require '../db-data-request'
-QueryBuilder = require './query-builder'
+SQLDataRequest = require '../sql-data-request'
+MysqlQueryBuilder = require './query-builder'
 
-class MysqlDataRequest extends DBDataRequest
+class MysqlDataRequest extends SQLDataRequest
     _builder: (table) ->
-        new QueryBuilder().setTable(table)
+        new MysqlQueryBuilder().setTable(table)
 
 module.exports = MysqlDataRequest;
