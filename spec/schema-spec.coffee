@@ -28,4 +28,29 @@ describe '@Schema', () ->
             schema = new Schema 'Car', _proxy: 'proxy'
             expect(schema.defaultFieldName).be.deep.equal 'carId'
 
+    describe '#validate', () ->
+        describe 'commin', () ->
+            it 'should check required fields',
+            it 'should support custom validatora'
+            it 'should ignore fields with Object type'
+            it 'should ignore fields with Model type'
+
+        describe 'Number', () ->
+            it 'should validate int'
+            it 'should validate min value'
+            it 'should validate max value'
+            it 'should validate enums'
+            it 'should validate by preset' #int, type
+
+        describe 'String', () ->
+            it 'should validate string'
+            it 'should validate length'
+            it 'should validate max length'
+            it 'should validate min length'
+            it 'should validate enums'
+            it 'should validate regexp'
+
+        describe 'Schema', () ->
+            it 'should validate it as separate schema'
+
 

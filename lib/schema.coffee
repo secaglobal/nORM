@@ -30,7 +30,7 @@ class Schema
     getProxy: () ->
         @
 
-    validate: () ->
+    validate: (model) ->
         @
 
 module.exports = Schema
