@@ -29,12 +29,6 @@ describe '@Schema', () ->
             expect(schema.defaultFieldName).be.deep.equal 'carId'
 
     describe '#validate', () ->
-        describe 'commin', () ->
-            it 'should check required fields',
-            it 'should support custom validatora'
-            it 'should ignore fields with Object type'
-            it 'should ignore fields with Model type'
-
         describe 'Number', () ->
             it 'should validate int'
             it 'should validate min value'
@@ -52,5 +46,11 @@ describe '@Schema', () ->
 
         describe 'Schema', () ->
             it 'should validate it as separate schema'
+
+        describe 'commin', () ->
+            it 'should check required fields'
+            it 'should support custom validatora'
+            it 'should ignore fields with Object type'
+            it 'should ignore fields with Model type'
 
 
