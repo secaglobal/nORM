@@ -1,6 +1,21 @@
 Schema = require("#{LIBS_PATH}/schema");
+Validator = require("#{LIBS_PATH}/validator");
 
 describe '@Schema', () ->
+    beforeEach () ->
+        sinon.spy(Validator,'len')
+        sinon.spy(Validator,'maxLen')
+        sinon.spy(Validator, 'required')
+        sinon.spy(Validator, 'string')
+        sinon.spy(Validator, 'numeric')
+
+    afterEach () ->
+        Validator.len.restore()
+        Validator.maxLen.restore()
+        Validator.required.restore()
+        Validator.string.restore()
+        Validator.numeric.restore()
+
     describe '#constructor', () ->
         it 'should handle simple structure', () ->
             schema = new Schema 'Car', title: {type: String}, nr:  {type: Number}
@@ -29,28 +44,41 @@ describe '@Schema', () ->
             expect(schema.defaultFieldName).be.deep.equal 'carId'
 
     describe '#validate', () ->
-        describe 'Number', () ->
-            it 'should validate int'
-            it 'should validate min value'
-            it 'should validate max value'
-            it 'should validate enums'
-            it 'should validate by preset' #int, type
+        it 'should skip collection and type fields', () ->
+            schema = new Schema 'Car', name: {type: String, collection: false}
+            expect(schema.validate({name: 'Valery'})).be.ok
 
-        describe 'String', () ->
-            it 'should validate string'
-            it 'should validate length'
-            it 'should validate max length'
-            it 'should validate min length'
-            it 'should validate enums'
-            it 'should validate regexp'
+        it 'should execute all validators', () ->
+            schema = new Schema 'Car', name: {type: String, required: true, maxLen: 10}
+            schema.validate {name: 'Valery'}
+            expect(Validator.maxLen.calledWith 'Valery', 10).be.ok
+            expect(Validator.required.calledWith 'Valery').be.ok
 
-        describe 'Schema', () ->
-            it 'should validate it as separate schema'
+        it 'should correctly validate fields with null value', () ->
+            schema = new Schema 'Car', name: {type: String, required: true, maxLen: 10}
+            schema.validate {name: null}
+            expect(Validator.maxLen.calledWith null, 10).be.ok
+            expect(Validator.required.calledWith null).be.ok
 
-        describe 'commin', () ->
-            it 'should check required fields'
-            it 'should support custom validatora'
-            it 'should ignore fields with Object type'
-            it 'should ignore fields with Model type'
+        it 'should correctly validate fields with undefined field', () ->
+            schema = new Schema 'Car', name: {type: String, required: true, maxLen: 10}
+            schema.validate {}
+            expect(Validator.maxLen.calledWith undefined, 10).be.ok
+            expect(Validator.required.calledWith undefined).be.ok
+
+        it 'should validate numbers', () ->
+            schema = new Schema 'Car', age: {type: Number}
+            schema.validate {age: 10}
+            expect(Validator.numeric.calledWith 10).be.ok
+
+        it 'should validate string', () ->
+            schema = new Schema 'Car', name: {type: String}
+            schema.validate {name: 'Valery'}
+            expect(Validator.string.calledWith 'Valery').be.ok
+
+        it 'should validate it as separate schema'
+        it 'should ignore fields with Object type'
+        it 'should ignore fields with Model type'
+
 
 

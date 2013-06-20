@@ -1,12 +1,12 @@
 _ = require 'underscore'
 Util = require './util'
 Model = require './model'
+Validator = require './validator'
 
 class Schema
-    fields: {id: {type: Number}}
-    keys: []
-
     constructor: (@name, structure) ->
+        @fields = {id: {type: Number}}
+        @keys = []
         @_applyAttr attr, value for attr, value of structure
         @defaultFieldName = Util.lcfirst(name) + 'Id'
 
@@ -31,6 +31,20 @@ class Schema
         @
 
     validate: (obj) ->
-        @
+        for field, config of @fields
+            value = obj[field];
+            for validator, params of config
+                if validator in ['collection', 'm2m']
+                    continue
+
+                if validator is 'type'
+                    console.log field, validator, params == String
+                    switch params
+                        when String then Validator.string value
+                        when Number then Validator.numeric value
+                else
+                    Validator[validator](value, params)
+
+
 
 module.exports = Schema
