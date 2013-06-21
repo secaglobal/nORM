@@ -1,4 +1,5 @@
 Schema = require("#{LIBS_PATH}/schema");
+Model = require("#{LIBS_PATH}/model");
 Validator = require("#{LIBS_PATH}/validator");
 
 describe '@Schema', () ->
@@ -76,9 +77,16 @@ describe '@Schema', () ->
             schema.validate {name: 'Valery'}
             expect(Validator.string.calledWith 'Valery').be.ok
 
-        it 'should validate it as separate schema'
-        it 'should ignore fields with Object type'
-        it 'should ignore fields with Model type'
+        it 'should ignore fields with Object type', () ->
+            schema = new Schema 'Car', details: {type: Object}
+            expect(schema.validate {details: {}}).should.be.ok
+
+        it 'should ignore fields with Model type', () ->
+            class Detail extends Model
+                @shema: new Schema 'Detail', title: String
+
+            schema = new Schema 'Car', details: [Detail]
+            expect(schema.validate {details: [new Detail({title: 'wheel'})]}).should.be.ok
 
 
 
