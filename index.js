@@ -1,1 +1,1 @@
-module.exports = require('./lib/norm');
+module.exports = require('./lib/');
