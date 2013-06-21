@@ -1,22 +1,21 @@
 {
-  "name": "norm",
-  "description": "Node.js ORM",
-  "version": "0.0.1",
-  "author": {
-    "name": "Sergey Levandovskiy",
-    "email": "levandovskiy.s@gmail.com"
-  },
-  "main": "index.js",
-  "dependencies": {
-    "express": "3.2.1",
-    "jade": "*",
-    "stylus": "*",
-    "coffee-script": "*",
-    "mysql": "*",
-    "q": "*",
-    "underscore": "*",
-    "sinon": "*",
-    "mocha": "*",
-    "chai": "*"
-  }
+    "name": "norm",
+    "description": "Node.js ORM",
+    "version": "0.0.1",
+    "author": {
+        "name": "Sergey Levandovskiy",
+        "email": "levandovskiy.s@gmail.com"
+    },
+    "main": "index.js",
+    "dependencies": {
+        "coffee-script": "*",
+        "mysql": "*",
+        "q": "*",
+        "underscore": "*"
+    },
+    "devDependencies": {
+        "sinon": "*",
+        "mocha": "*",
+        "chai": "*"
+    }
 }
