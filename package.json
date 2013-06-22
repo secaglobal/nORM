@@ -7,6 +7,9 @@
         "email": "levandovskiy.s@gmail.com"
     },
     "main": "./index.js",
+    "directories": {
+        "lib": "./lib/"
+    },
     "dependencies": {
         "coffee-script": "*",
         "mysql": "*",
