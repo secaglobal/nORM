@@ -7,15 +7,20 @@ Util = require './util'
 
 #@abstract
 class SQLDataRequest extends DBDataRequest
+    fillTotalCount: () ->
+        @_fillTotalCount = true
+        @
+
     find: (model) ->
-        query = @_builder(model.schema.name)
+        builder = @_builder(model.schema.name)
             .setFilters(@_filters or {})
             .setLimit(@_limit)
             .setOffset(@_offset)
             .setOrder(@_order)
-            .compose()
 
-        @_proxy.perform(query)
+        builder.addMeta QueryBuilder.META__TOTAL_COUNT if @_fillTotalCount
+
+        @_proxy.perform(builder)
 
     save: (models, fillId = true) ->
         deferred = Q.defer()

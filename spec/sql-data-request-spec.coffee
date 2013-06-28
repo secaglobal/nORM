@@ -47,14 +47,24 @@ describe '@SQLDataRequest', () ->
         @proxy.perform.restore()
 
     describe '#find', () ->
-        it 'should prepare query and execute via @DataProxy#query', () ->
-            query = @queryBuilder.setTable(Person.schema.name).setFilters(id: 4, state: {$ne: 5}).compose()
+        it 'should prepare query or builder and execute via @DataProxy#query', () ->
+            query = @queryBuilder
+                .setTable(Person.schema.name)
+                .setFilters(id: 4, state: {$ne: 5})
+                .compose()
+
             @request.setFilters({id: 4, state: {$ne: 5}}).find(Person)
-            @proxy.perform.calledWith(query).should.be.ok
+            expect(@proxy.perform.args[0]).be.ok
+            expect(@proxy.perform.args[0][0].compose()).be.equal query
 
         it 'should return promise', () ->
             expect(@request.find(Person)).to.be.instanceof Q.allResolved(
               []).constructor
+
+        it 'should set meta tag META__TOTAL_COUNT if required', () ->
+            @request.setFilters({id: 4, state: {$ne: 5}}).fillTotalCount().find(Person)
+            builder = @proxy.perform.args[0][0]
+            expect(builder.hasMeta(MysqlQueryBuilder.META__TOTAL_COUNT)).be.ok
 
     describe '#save', () ->
         it 'should perfotm save for all changed models', () ->

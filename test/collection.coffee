@@ -113,6 +113,17 @@ describe '@Collection', () ->
                         done e
                 .fail(done)
 
+        it 'should set total count if required', (done) ->
+            new Collection([], {model: Person, total: true, limit: 1}).load()
+                .then (col) ->
+                    try
+                        col.length.should.be.equal 1
+                        col.total.should.be.equal 3
+                        done()
+                    catch e
+                        done e
+                .fail(done)
+
 
 
 

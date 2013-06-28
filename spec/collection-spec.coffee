@@ -28,7 +28,7 @@ describe '@Collection', () ->
         sinon.stub(@collection.getRequest(), 'setOffset').returns @collection.getRequest()
         sinon.stub(@collection.getRequest(), 'setFilters').returns @collection.getRequest()
         sinon.stub(@collection.getRequest(), 'fillRelation').returns @deferred.promise
-
+        sinon.spy(@collection.getRequest(), 'fillTotalCount')
 
     afterEach () ->
         @collection.getRequest().find.restore()
@@ -39,6 +39,7 @@ describe '@Collection', () ->
         @collection.getRequest().save.restore()
         @collection.getRequest().delete.restore()
         @collection.getRequest().fillRelation.restore()
+        @collection.getRequest().fillTotalCount.restore()
 
     describe '#reset', () ->
         it 'should reset models with new list', () ->
@@ -122,6 +123,41 @@ describe '@Collection', () ->
             @collection.getRequest().setOrder.called.should.be.ok
             expect(@collection.getRequest().setOrder.args[0][0]).be.ok
             @collection.getRequest().setOrder.calledWith(@collection.config.order).should.be.ok
+
+        it 'should call request#fillTotalCount if option `total` is true', () ->
+            @collection.config.total = true
+            @collection.load()
+            @collection.getRequest().fillTotalCount.called.should.be.ok
+
+        it 'should set `total` property if required', (done) ->
+            col = @collection
+            col.config.total = true
+            col.load().then () ->
+                try
+                    expect(col.total).be.equal 10
+                    done()
+                catch e
+                    done e
+            .fail(done)
+
+            res = [{id: 4}]
+            res.total = 10
+            @deferred.resolve res
+
+        it 'should set `total` property if required and total is zero', (done) ->
+            col = @collection
+            col.config.total = true
+            col.load().then () ->
+                try
+                    expect(col.total).be.equal 0
+                    done()
+                catch e
+                    done e
+            .fail(done)
+
+            res = []
+            res.total = 0
+            @deferred.resolve res
 
     describe '#save', () ->
         it 'should pass all models to @DataRequest#save', () ->

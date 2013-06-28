@@ -90,15 +90,17 @@ class Collection extends Entity
 
 
     load: () ->
-        _ = @
+        _this = @
 
         @_request.setFilters(@config.filters) if @config.filters
         @_request.setLimit(@config.limit) if @config.limit
         @_request.setOrder(@config.order) if @config.order
         @_request.setOffset(@config.offset) if @config.offset
+        @_request.fillTotalCount() if @config.total
 
         @_request.find(@config.model).then (rows)->
-            _.reset rows
+            _this.total = rows.total if rows.total?
+            _this.reset rows
 
 
     save: () ->

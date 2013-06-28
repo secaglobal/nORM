@@ -1,10 +1,14 @@
 Utils = require '../util'
+underscore = require 'underscore'
 
 class MysqlQueryBuilder
     @TYPE__SELECT = 'Select'
     @TYPE__INSERT = 'Insert'
     @TYPE__UPDATE = 'Update'
     @TYPE__DELETE = 'Delete'
+
+    @META__NO_CACHE = 'SQL_NO_CACHE'
+    @META__TOTAL_COUNT = 'SQL_CALC_FOUND_ROWS'
 
     @_comparisonOperators =
         $eq: '=',
@@ -21,6 +25,7 @@ class MysqlQueryBuilder
         $and: 'and'
 
     constructor: (@_type = MysqlQueryBuilder.TYPE__SELECT) ->
+        @_meta = []
         @
 
     setType: (@_type) ->
@@ -52,11 +57,28 @@ class MysqlQueryBuilder
         @_type = MysqlQueryBuilder.TYPE__INSERT
         @
 
+    addMeta: (flag) ->
+        @_meta.push.apply @_meta, arguments
+        @
+
+    hasMeta: (flag) ->
+        underscore.contains @_meta, flag
+
     compose: () ->
         @["_compose#{@_type}"]()
 
     _composeSelect: () ->
-        "select * from `#{@_table}`#{@_composeWhereClouse()}#{@_composeOrderClouse()}#{@_composeLimitClouse()}#{@_composeOffsetClouse()}"
+        parts = [
+            @_composeWhereClouse(),
+            @_composeOrderClouse(),
+            @_composeLimitClouse(),
+            @_composeOffsetClouse()
+        ].join('')
+
+        meta = ''
+        meta = @_meta.join(' ') + ' ' if @_meta.length
+
+        "select #{meta}* from `#{@_table}`#{parts}"
 
     _composeUpdate: () ->
         valuesRep = ("`#{n}`=#{MysqlQueryBuilder._escape(v)}" for n, v of @_newValues).join(',')

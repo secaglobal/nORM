@@ -119,4 +119,21 @@ describe '@Mysql.QueryBuilder', () ->
             @builder.compose()
                 .should.equal "insert into `Test`(`state`,`status`) values('1','2'),('2','3'),('3','4')"
 
+    describe '#addMeta', () ->
+        it 'should insert different meta tegs', () ->
+            expect(@builder
+                .addMeta(Builder.META__TOTAL_COUNT, Builder.META__NO_CACHE)
+                .compose()
+            ).equal 'select SQL_CALC_FOUND_ROWS SQL_NO_CACHE * from `Test`'
+
+    describe '#hasMeta', () ->
+        it 'should return true if meta was set', () ->
+            @builder.addMeta Builder.META__TOTAL_COUNT, Builder.META__NO_CACHE
+            expect(@builder.hasMeta(Builder.META__TOTAL_COUNT)).be.ok
+            expect(@builder.hasMeta(Builder.META__NO_CACHE)).be.ok
+
+        it 'should return false if meta was not set', () ->
+            @builder.addMeta Builder.META__NO_CACHE
+            expect(@builder.hasMeta(Builder.META__TOTAL_COUNT)).be.not.ok
+            expect(@builder.hasMeta(Builder.META__NO_CACHE)).be.ok
 

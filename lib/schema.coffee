@@ -38,7 +38,6 @@ class Schema
                     continue
 
                 if validator is 'type'
-                    console.log field, validator, params == String
                     switch params
                         when String then Validator.string value
                         when Number then Validator.numeric value
