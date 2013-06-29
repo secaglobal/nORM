@@ -1,6 +1,6 @@
 DBDataRequest = require './db-data-request'
 Collection = require './collection'
-QueryBuilder = require './mysql/query-builder'
+SQLQueryBuilder = require './sql-query-builder'
 _ = require 'underscore'
 Q = require 'q'
 Util = require './util'
@@ -18,7 +18,7 @@ class SQLDataRequest extends DBDataRequest
             .setOffset(@_offset)
             .setOrder(@_order)
 
-        builder.addMeta QueryBuilder.META__TOTAL_COUNT if @_fillTotalCount
+        builder.addMeta SQLQueryBuilder.META__TOTAL_COUNT if @_fillTotalCount
 
         @_proxy.perform(builder)
 
@@ -48,13 +48,13 @@ class SQLDataRequest extends DBDataRequest
 
 
     delete: (models) ->
-        table = models[0].constructor.schema.name
+        table = models[0].self.schema.name
         ids = _.filter _.pluck(models, 'id'), (v) ->
             v > 0
 
         @getProxy().perform \
             @_builder(table)
-                .setType(QueryBuilder.TYPE__DELETE)
+                .setType(SQLQueryBuilder.TYPE__DELETE)
                 .setFilters({id: {$in: ids}})
                 .compose()
 
@@ -151,6 +151,31 @@ class SQLDataRequest extends DBDataRequest
 
     fillVirtualOneToManyRelation: (models, relation) ->
         throw 'SQL collections dows not support virtual relations'
+
+    saveManyToManyRelations: (parent, children, relation) ->
+        parentId = parent.id
+        parentSchema = parent.self.schema
+        childModel = parentSchema.fields[relation].type
+        childSchema = childModel.schema
+        crossTable = [parentSchema.name, childSchema.name].sort().join('__')
+        parentCrossField = parentSchema.defaultFieldName
+        childCrossField = childSchema.defaultFieldName
+        proxy = @getProxy()
+        builder = @_builder
+
+        ids = _.compact children.pluck('id')
+        filters = {}
+        filters[parentCrossField] = parent.id
+        filters[childCrossField] = {$nin: ids} if ids.length
+
+        query = builder(crossTable, SQLQueryBuilder.TYPE__DELETE).setFilters(filters)
+        proxy.perform(query).then () ->
+            if ids.length
+                query = builder(crossTable, SQLQueryBuilder.TYPE__INSERT)
+                    .setFields([parentCrossField, childCrossField])
+                    .insertValues(ids.map (id) -> [parentId, id])
+
+                proxy.perform query
 
     _insertModels: (models, promises) ->
         table = models[0].schema.name

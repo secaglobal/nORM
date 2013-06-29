@@ -41,6 +41,12 @@ describe '@SQLDataRequest', () ->
           {model: Person}
         ).models
 
+        @tasks = new Collection([
+            {id: 12, title: 'Copy paper'}
+            {id: 24, title: 'Clean rubbish'}
+            {id: 37, title: 'Switch off light'}
+        ], {model: Task})
+
         assignPromise.call @
 
     afterEach () ->
@@ -282,5 +288,61 @@ describe '@SQLDataRequest', () ->
                 {personId: 4, taskId: 9},
                 {personId: 7, taskId: 10},
             ]
+
+    describe '#saveManyToManyRelations', () ->
+        it 'should delete all relations except available', () ->
+            query = new MysqlQueryBuilder(MysqlQueryBuilder.TYPE__DELETE)
+                .setTable('Person__Task')
+                .setFilters({personId: @models[0].id, taskId: {$nin: [12,24,37]}})
+                .compose()
+
+            @request.saveManyToManyRelations(@models[0], @tasks, 'tasks')
+
+            expect(@proxy.perform.args[0][0].compose()).be.equal query
+
+        it 'should delete all relations if nothing should be added', () ->
+            tasks = new Collection([], {model: Task})
+            query = new MysqlQueryBuilder(MysqlQueryBuilder.TYPE__DELETE)
+                .setTable('Person__Task')
+                .setFilters({personId: @models[0].id})
+                .compose()
+
+            @request.saveManyToManyRelations(@models[0], tasks, 'tasks')
+
+            expect(@proxy.perform.args[0][0].compose()).be.equal query
+
+        it 'should save relations', (done) ->
+            _this = @
+            parentId = @models[0].id
+            query = new MysqlQueryBuilder(MysqlQueryBuilder.TYPE__INSERT)
+                .setTable('Person__Task')
+                .setFields(['personId', 'taskId'])
+                .insertValues([[parentId, 12], [parentId, 24], [parentId, 37]])
+                .compose()
+
+            @request.saveManyToManyRelations(@models[0], @tasks, 'tasks').then () ->
+                expect(_this.proxy.perform.args[1][0].compose()).be.equal query
+                done()
+            .fail(done)
+
+            @deferred.promise.then () ->
+                _this.deferred.resolve()
+            @deferred.resolve()
+
+        it 'should just delete all relations if received empty collection', (done) ->
+            _this = @
+            tasks = new Collection([], {model: Task})
+            @request.saveManyToManyRelations(@models[0], tasks, 'tasks').then () ->
+                expect(_this.proxy.perform.calledOnce).be.ok
+                done()
+            .fail(done)
+
+            @deferred.promise.then () ->
+                _this.deferred.resolve()
+            @deferred.resolve()
+
+        it 'should return promise', () ->
+            res = @request.saveManyToManyRelations(@models[0], @tasks, 'tasks')
+            expect(res).to.be.instanceof Q.defer().promise.constructor
 
 

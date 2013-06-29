@@ -110,10 +110,6 @@ class Collection extends Entity
         _ = @
         @_request.delete(@models).then ()->
             _.reset([])
-#
-#    keys: () ->
-#        _.filter models.pluck('id'), (v) ->
-#            v > 0
 
 module.exports = Collection
 

@@ -41,6 +41,8 @@ describe '@Collection', () ->
         @collection.getRequest().fillRelation.restore()
         @collection.getRequest().fillTotalCount.restore()
 
+    it 'all methods should receive just Collection, not an array'
+
     describe '#reset', () ->
         it 'should reset models with new list', () ->
             @collection.reset [{name: 'A', age: 1}, {name: 'B', age: 2}]
