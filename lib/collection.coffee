@@ -73,6 +73,7 @@ class Collection extends Entity
         @
 
     require: () ->
+        _this = @
         deferred = Q.defer()
         fields = @config.model.schema.fields
         promises = []
@@ -85,7 +86,7 @@ class Collection extends Entity
             results.forEach (result) ->
                 if result.state isnt "fulfilled"
                     deferred.reject result.reason
-            deferred.resolve()
+            deferred.resolve(_this)
 
         deferred.promise
 
