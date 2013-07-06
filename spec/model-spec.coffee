@@ -91,3 +91,8 @@ describe '@Model', () ->
             person.job.title = "other title"
             expect(person.hasChanges()).is.not.ok
             expect(person.job.hasChanges()).is.ok
+
+    describe '#toJSON', () ->
+        it 'should insert all fields from schema', () ->
+            person = new Person({id: 4, name: 'name', hasCar: true, _private: true})
+            expect(person.toJSON()).to.be.equal '{"id":4,"name":"name"}'

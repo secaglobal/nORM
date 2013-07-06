@@ -17,12 +17,12 @@ describe '@SQLDataRequest', () ->
         if not @proxy.perform.restore
             sinon.stub(@proxy, 'perform')
 
-        _ = @
+        _this = @
         @deferred = Q.defer()
         promise = @deferred.promise
         @proxy.perform.returns promise;
         promise.then () ->
-            assignPromise.call _
+            assignPromise.call _this
 
     beforeEach () ->
         @proxy = dataProvider.getProxy Person
@@ -151,19 +151,19 @@ describe '@SQLDataRequest', () ->
             @proxy.perform.calledWith(searchQuery).should.be.ok
 
         it 'should assign result to appropriate model', (done) ->
-            _ = @
+            _this = @
 
             @request.fillManyToOneRelation(@models, 'job').then () ->
                 try
-                    expect(_.models[0].job).to.be.ok
-                    expect(_.models[0].job).instanceof Model
-                    _.models[0].job.id.should.equal 1
+                    expect(_this.models[0].job).to.be.ok
+                    expect(_this.models[0].job).instanceof Model
+                    _this.models[0].job.id.should.equal 1
 
-                    expect(_.models[4].job).to.be.ok
-                    expect(_.models[4].job).instanceof Model
-                    _.models[4].job.id.should.equal 2
+                    expect(_this.models[4].job).to.be.ok
+                    expect(_this.models[4].job).instanceof Model
+                    _this.models[4].job.id.should.equal 2
 
-                    expect(_.models[5].job).to.be.not.ok
+                    expect(_this.models[5].job).to.be.not.ok
 
                     done()
                 catch err
@@ -186,21 +186,21 @@ describe '@SQLDataRequest', () ->
             @proxy.perform.calledWith(searchQuery).should.be.ok
 
         it 'should assign result to appropriate model', (done) ->
-            _ = @
+            _this = @
 
             @request.fillOneToManyRelation(@models, 'cars').then () ->
                 try
-                    expect(_.models[0].cars).to.be.ok
-                    expect(_.models[0].cars.length).to.be.equal 1
-                    _.models[0].cars.first().id.should.equal 1
+                    expect(_this.models[0].cars).to.be.ok
+                    expect(_this.models[0].cars.length).to.be.equal 1
+                    _this.models[0].cars.first().id.should.equal 1
 
-                    expect(_.models[5].cars).to.be.ok
-                    expect(_.models[5].cars.length).to.be.equal 2
-                    _.models[5].cars.first().id.should.equal 2
-                    _.models[5].cars.at(1).id.should.equal 3
+                    expect(_this.models[5].cars).to.be.ok
+                    expect(_this.models[5].cars.length).to.be.equal 2
+                    _this.models[5].cars.first().id.should.equal 2
+                    _this.models[5].cars.at(1).id.should.equal 3
 
-                    expect(_.models[4].cars).to.be.ok
-                    expect(_.models[4].cars.isEmpty()).to.be.ok
+                    expect(_this.models[4].cars).to.be.ok
+                    expect(_this.models[4].cars.isEmpty()).to.be.ok
 
                     done()
                 catch err
@@ -229,7 +229,7 @@ describe '@SQLDataRequest', () ->
             @proxy.perform.calledWith(searchQuery).should.be.ok
 
         it 'should search in target table', (done) ->
-            _ = @
+            _this = @
             searchQuery = @queryBuilder
                 .setTable(Task.schema.name)
                 .setFilters({id: {$in: [7, 8, 9, 10]}})
@@ -238,13 +238,14 @@ describe '@SQLDataRequest', () ->
             @request.fillManyToManyRelation(@models, 'tasks')
                 .then () ->
                     try
-                        _.proxy.perform.calledWith(searchQuery).should.be.ok
+                        _this.proxy.perform.calledWith(searchQuery).should.be.ok
                         done()
                     catch e
                         done(e)
+                .fail done
 
             @deferred.promise.then () ->
-                _.deferred.resolve [{id: 7}, {id: 8}, {id: 9}, {id: 10}]
+                _this.deferred.resolve [{id: 7}, {id: 8}, {id: 9}, {id: 10}]
 
             @deferred.resolve [
                 {personId: 4, taskId: 7},
@@ -258,29 +259,29 @@ describe '@SQLDataRequest', () ->
             expect(res).to.be.instanceof Q.defer().promise.constructor
 
         it 'should assign result to appropriate model', (done) ->
-            _ = @
+            _this = @
 
             @request.fillManyToManyRelation(@models, 'tasks').then () ->
                 try
-                    expect(_.models[0].tasks).to.be.ok
-                    expect(_.models[0].tasks.length).to.be.equal 3
-                    _.models[0].tasks.first().id.should.equal 7
-                    _.models[0].tasks.at(1).id.should.equal 8
-                    _.models[0].tasks.at(2).id.should.equal 9
+                    expect(_this.models[0].tasks).to.be.ok
+                    expect(_this.models[0].tasks.length).to.be.equal 3
+                    _this.models[0].tasks.first().id.should.equal 7
+                    _this.models[0].tasks.at(1).id.should.equal 8
+                    _this.models[0].tasks.at(2).id.should.equal 9
 
-                    expect(_.models[5].tasks).to.be.ok
-                    expect(_.models[5].tasks.length).to.be.equal 1
-                    _.models[5].tasks.first().id.should.equal 10
+                    expect(_this.models[5].tasks).to.be.ok
+                    expect(_this.models[5].tasks.length).to.be.equal 1
+                    _this.models[5].tasks.first().id.should.equal 10
 
-                    expect(_.models[4].tasks).to.be.ok
-                    expect(_.models[4].tasks.isEmpty()).to.be.ok
+                    expect(_this.models[4].tasks).to.be.ok
+                    expect(_this.models[4].tasks.isEmpty()).to.be.ok
 
                     done()
                 catch err
                     done err
 
             @deferred.promise.then () ->
-                _.deferred.resolve [{id: 7}, {id: 8}, {id: 9}, {id: 10}]
+                _this.deferred.resolve [{id: 7}, {id: 8}, {id: 9}, {id: 10}]
 
             @deferred.resolve [
                 {personId: 4, taskId: 7},

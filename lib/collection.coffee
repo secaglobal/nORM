@@ -1,4 +1,4 @@
-underscore = require 'underscore'
+_ = require 'underscore'
 Q = require 'q'
 Util = require './util'
 DataProvider = require './data-provider'
@@ -45,25 +45,28 @@ class Collection extends Entity
         @
 
     first: () ->
-        underscore.first(@models)
+        _.first(@models)
 
     at: (nr) ->
         @models[nr]
 
     where: (filter) ->
-        underscore.where(@models, filter)
+        _.where(@models, filter)
 
     findWhere: (filter) ->
-        underscore.findWhere(@models, filter)
+        _.findWhere(@models, filter)
 
     pluck: (field) ->
-        underscore.pluck(@models, field)
+        _.pluck(@models, field)
 
     isEmpty: () ->
-        underscore.isEmpty(@models)
+        _.isEmpty(@models)
 
     forEach: (fn) ->
-        underscore.forEach(@models, fn)
+        _.forEach(@models, fn)
+
+    toJSON: () ->
+        '[' + _.map(@models, (m) -> m.toJSON()).join(',') + ']'
 
     refreshLength: () ->
         @length = @models.length
@@ -87,8 +90,6 @@ class Collection extends Entity
 
         deferred.promise
 
-
-
     load: () ->
         _this = @
 
@@ -102,14 +103,13 @@ class Collection extends Entity
             _this.total = rows.total if rows.total?
             _this.reset rows
 
-
     save: () ->
         @_request.save(@models)
 
     delete: () ->
-        _ = @
+        _this = @
         @_request.delete(@models).then ()->
-            _.reset([])
+            _this.reset([])
 
 module.exports = Collection
 

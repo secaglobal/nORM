@@ -127,10 +127,10 @@ class MysqlQueryBuilder extends SQLQueryBuilder
 
     @_escape: (value) ->
         #TODO prepare real escape
-        _ = @
+        _this = @
         if Utils.isArray(value)
             return '(' + value.map (v) ->
-                _._escape v
+                _this._escape v
             .join(',') + ')'
         else if value?
             return "'#{value.toString().replace(/\\/g, '\\\\').replace(/['"]/g, '\\\'')}'"

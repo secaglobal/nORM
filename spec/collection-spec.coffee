@@ -77,10 +77,10 @@ describe '@Collection', () ->
             expect(@collection.load()).to.be.deep.instanceof @deferred.promise.constructor
 
         it 'should fill collection with received models', (done) ->
-            _ = @
+            _this = @
             @collection.load().then ()->
                 try
-                    _.collection.length.should.be.equal 1
+                    _this.collection.length.should.be.equal 1
                     done()
                 catch err
                     done err
@@ -90,10 +90,10 @@ describe '@Collection', () ->
             ])
 
         it 'should pass collection as first argument for resolved promise', (done) ->
-            _ = @
+            _this = @
             @collection.load().then (col)->
                 try
-                    _.collection.should.be.equal col
+                    _this.collection.should.be.equal col
                     done()
                 catch err
                     done err
@@ -188,7 +188,7 @@ describe '@Collection', () ->
             expect(@collection.delete()).to.be.instanceof @deferred.promise.constructor
 
         it 'should reset models array if success', (done) ->
-            _ = @
+            _this = @
             @collection.reset [
                 {id: 1, name: 'lego'} ,
                 {name: 'mike'}
@@ -196,7 +196,7 @@ describe '@Collection', () ->
 
             @collection.delete().then(() ->
                 try
-                    _.collection.models.should.be.deep.equal []
+                    _this.collection.models.should.be.deep.equal []
                     done()
                 catch err
                     done err
@@ -205,7 +205,7 @@ describe '@Collection', () ->
             @deferred.resolve(123)
 
         it 'should keep models array if false', (done) ->
-            _ = @
+            _this = @
             @collection.reset [
                 {id: 1, name: 'lego'} ,
                 {name: 'mike'}
@@ -214,7 +214,7 @@ describe '@Collection', () ->
 
             @collection.delete().then null, (err) ->
                 try
-                    _.collection.models.should.be.deep.equal models
+                    _this.collection.models.should.be.deep.equal models
                     done()
                 catch err
                     done err
@@ -230,4 +230,13 @@ describe '@Collection', () ->
 
         it 'should returns promise', () ->
             expect(@collection.require('job', 'tasks')).to.be.instanceof  @deferred.promise.constructor
+
+    describe '#toJSON', () ->
+        it 'should return json version of all it models', () ->
+            @collection.reset [
+                {id: 1, name: 'lego'} ,
+                {name: 'mike'}
+            ]
+
+            expect(@collection.toJSON()).to.be.equal '[{"id":1,"name":"lego"},{"name":"mike"}]'
 

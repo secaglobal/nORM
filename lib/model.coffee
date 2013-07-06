@@ -20,9 +20,17 @@ class Model extends IModel
             @original[attr] = value
 
     require: () ->
-        me = @
+        _this = @
         collection = @collection or new Collection([@], {model: @self})
-        collection.require.apply(collection, arguments).then(() -> return me)
+        collection.require.apply(collection, arguments).then(() -> return _this)
+
+    toJSON: () ->
+        res = []
+        for field of @self.schema.fields
+            value = @[field]
+            if value?
+                res.push JSON.stringify(field) + ':' + JSON.stringify(value)
+        return '{' + res.join(',') + '}'
 
     hasChanges: () ->
         !_.isEmpty @getChangedAttributes()
