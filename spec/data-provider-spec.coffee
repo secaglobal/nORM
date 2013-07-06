@@ -27,3 +27,7 @@ describe '@DataProvider', () ->
     describe '#createRequest', () ->
         it 'should return appropriate @DataRequest if defined Model', () ->
             @dataProvider.createRequest(Person).should.be.instanceof MysqlDataRequest
+
+        it 'should throw error if proxy is not found', () ->
+            dp = @dataProvider
+            expect(() -> dp.createRequest(new Model())).to.throw "Proxy not found"
