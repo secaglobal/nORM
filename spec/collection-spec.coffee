@@ -231,6 +231,8 @@ describe '@Collection', () ->
         it 'should returns promise', () ->
             expect(@collection.require('job', 'tasks')).to.be.instanceof  @deferred.promise.constructor
 
+        it 'should pass collection as first parameter of promise'
+
     describe '#toJSON', () ->
         it 'should return models', () ->
             @collection.reset [

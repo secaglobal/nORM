@@ -29,7 +29,7 @@ class Model extends IModel
         for field of @self.schema.fields
             value = @[field]
             if value?
-                res[field] = if value.toJSON then value.toJSON() else value
+                res[field] = value
         return res
 
     hasChanges: () ->
