@@ -25,12 +25,12 @@ class Model extends IModel
         collection.require.apply(collection, arguments).then(() -> return _this)
 
     toJSON: () ->
-        res = []
+        res = {}
         for field of @self.schema.fields
             value = @[field]
             if value?
-                res.push JSON.stringify(field) + ':' + JSON.stringify(value)
-        return '{' + res.join(',') + '}'
+                res[field] = if value.toJSON then valueto.JSON() else value
+        return res
 
     hasChanges: () ->
         !_.isEmpty @getChangedAttributes()

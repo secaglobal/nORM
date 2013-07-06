@@ -37,11 +37,11 @@ class SQLDataRequest extends DBDataRequest
         @_insertModels(onInsert, promises) if onInsert.length and not fillId
 
 
-        Q.allResolved(promises).then (promises) ->
-            promises.forEach (promise) ->
-                if not promise.isFulfilled()
-                    deferred.reject promise.valueOf().exception
-                    return
+        Q.allSettled(promises).then (results) ->
+            results.forEach (result) ->
+                if result.state isnt "fulfilled"
+                    deferred.reject result.reason
+
             deferred.resolve()
 
         deferred.promise

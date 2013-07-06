@@ -232,11 +232,11 @@ describe '@Collection', () ->
             expect(@collection.require('job', 'tasks')).to.be.instanceof  @deferred.promise.constructor
 
     describe '#toJSON', () ->
-        it 'should return json version of all it models', () ->
+        it 'should return models', () ->
             @collection.reset [
                 {id: 1, name: 'lego'} ,
                 {name: 'mike'}
             ]
 
-            expect(@collection.toJSON()).to.be.equal '[{"id":1,"name":"lego"},{"name":"mike"}]'
+            expect(@collection.toJSON()).to.be.equal @collection.models
 

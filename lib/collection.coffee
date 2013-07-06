@@ -66,7 +66,7 @@ class Collection extends Entity
         _.forEach(@models, fn)
 
     toJSON: () ->
-        '[' + _.map(@models, (m) -> m.toJSON()).join(',') + ']'
+        @models
 
     refreshLength: () ->
         @length = @models.length
@@ -81,11 +81,10 @@ class Collection extends Entity
             if fields[field].type.prototype instanceof IModel
                 promises.push @_request.fillRelation(@models, field)
 
-        Q.allResolved(promises).then (promises) ->
-            promises.forEach (promise) ->
-                if not promise.isFulfilled()
-                    deferred.reject promise.valueOf().exception
-                return
+        Q.allSettled(promises).then (results) ->
+            results.forEach (result) ->
+                if result.state isnt "fulfilled"
+                    deferred.reject result.reason
             deferred.resolve()
 
         deferred.promise

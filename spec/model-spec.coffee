@@ -95,4 +95,4 @@ describe '@Model', () ->
     describe '#toJSON', () ->
         it 'should insert all fields from schema', () ->
             person = new Person({id: 4, name: 'name', hasCar: true, _private: true})
-            expect(person.toJSON()).to.be.equal '{"id":4,"name":"name"}'
+            expect(person.toJSON()).to.be.deep.equal {id:4, name:"name"}

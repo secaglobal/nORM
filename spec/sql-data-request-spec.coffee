@@ -64,7 +64,7 @@ describe '@SQLDataRequest', () ->
             expect(@proxy.perform.args[0][0].compose()).be.equal query
 
         it 'should return promise', () ->
-            expect(@request.find(Person)).to.be.instanceof Q.allResolved(
+            expect(@request.find(Person)).to.be.instanceof Q.allSettled(
               []).constructor
 
         it 'should set meta tag META__TOTAL_COUNT if required', () ->
@@ -115,11 +115,13 @@ describe '@SQLDataRequest', () ->
                     done()
                 catch e
                     done e
+            .fail done
 
             @deferred.resolve({insertId: 142})
 
+
         it 'should return promise', () ->
-            expect(@request.save @models).to.be.instanceof Q.allResolved(
+            expect(@request.save @models).to.be.instanceof Q.allSettled(
               []).constructor
 
     describe '#delete', () ->
