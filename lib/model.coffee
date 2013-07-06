@@ -29,7 +29,7 @@ class Model extends IModel
         for field of @self.schema.fields
             value = @[field]
             if value?
-                res[field] = if value.toJSON then valueto.JSON() else value
+                res[field] = if value.toJSON then value.toJSON() else value
         return res
 
     hasChanges: () ->
@@ -38,7 +38,7 @@ class Model extends IModel
     getChangedAttributes: () ->
         changes = {}
         fields = @self.schema.fields
-        for field, params of fields
+        for field of fields
             changes[field] = @[field] if @original[field] != @[field]
         return if _.isEmpty(changes) then false else changes
 
