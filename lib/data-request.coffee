@@ -1,4 +1,5 @@
 Q = require 'q'
+_ = require 'underscore'
 
 class DataRequest
     constructor: (@_proxy) ->
@@ -58,7 +59,7 @@ class DataRequest
             deferred.resolve()
             return deferred.promise
 
-        config = models[0].schema.fields[relation]
+        config = models.config.model.schema.fields[relation]
 
         if config.m2m
             return @fillManyToManyRelation models, relation

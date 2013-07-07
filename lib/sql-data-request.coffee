@@ -60,8 +60,6 @@ class SQLDataRequest extends DBDataRequest
                 .compose()
 
     fillManyToOneRelation: (models, relation) ->
-        models = new Collection(models) until models instanceof Collection
-
         schema = models.config.model.schema
         config = schema.fields[relation]
         relationSchema = config.type.schema
@@ -78,8 +76,6 @@ class SQLDataRequest extends DBDataRequest
                 m[relation] = new config.type record if record
 
     fillOneToManyRelation: (models, relation) ->
-        models = new Collection(models) until models instanceof Collection
-
         schema = models.config.model.schema
         config = schema.fields[relation]
         relationSchema = config.type.schema
@@ -104,9 +100,7 @@ class SQLDataRequest extends DBDataRequest
                 col.reset(_.where(rows, filters))
 
     fillManyToManyRelation: (models, relation) ->
-        models = new Collection(models) until models instanceof Collection
         self = @
-
         schema = models.config.model.schema
         relationModel = schema.fields[relation].type
         relationSchema = relationModel.schema

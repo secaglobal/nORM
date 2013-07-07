@@ -16,6 +16,9 @@ class Collection extends Entity
         if !@config.model and models.length and models[0] instanceof IModel
             @config.model = models[0].self
 
+        @config.relations = {} # must lead #setFields
+        @setFields(@config.fields) if @config.fields
+
         @reset(models) if models.length
         @_request = DataProvider.createRequest(@config.model)
 
@@ -97,26 +100,18 @@ class Collection extends Entity
         @
 
     require: () ->
-        _this = @
-        deferred = Q.defer()
         fields = @config.model.schema.fields
-        promises = []
 
         for field in arguments
-            if fields[field].type.prototype instanceof IModel
-                promises.push @_request.fillRelation(@, field)
+            if fields[field].external and not @config.relations[field]?
+                @config.relations[field] = []
 
-        Q.allSettled(promises).then (results) ->
-            results.forEach (result) ->
-                if result.state isnt "fulfilled"
-                    deferred.reject result.reason
-            deferred.resolve(_this)
-
-        deferred.promise
+        @_fillRelations()
 
     load: () ->
         _this = @
 
+        @_request.setFields(@config.fields) if @config.fields
         @_request.setFilters(@config.filters) if @config.filters
         @_request.setLimit(@config.limit) if @config.limit
         @_request.setOrder(@config.order) if @config.order
@@ -132,10 +127,9 @@ class Collection extends Entity
         _this = @
         promises = []
         deferred = Q.defer()
-        relations = @config.relations || {}
-
-        for relation, fields  of relations
-            promises.push @_request.fillRelation(@, relation, fields)
+        relations = @config.relations
+        for relation, fields of relations
+            promises.push(@_request.fillRelation(@, relation, fields)) if not @[relation]?
 
         Q.allSettled(promises).then (results) ->
             results.forEach (result) ->

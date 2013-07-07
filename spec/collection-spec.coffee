@@ -12,6 +12,7 @@ describe '@Collection', () ->
     beforeEach () ->
         @collection = new Collection [], {
             model: Person,
+            fields: ['id'],
             order: {id: -1},
             limit: 10,
             offset: 1,
@@ -27,6 +28,7 @@ describe '@Collection', () ->
         sinon.stub(@collection.getRequest(), 'setLimit').returns @collection.getRequest()
         sinon.stub(@collection.getRequest(), 'setOffset').returns @collection.getRequest()
         sinon.stub(@collection.getRequest(), 'setFilters').returns @collection.getRequest()
+        sinon.stub(@collection.getRequest(), 'setFields').returns @collection.getRequest()
         sinon.stub(@collection.getRequest(), 'fillRelation').returns @deferred.promise
         sinon.spy(@collection.getRequest(), 'fillTotalCount')
 
@@ -36,6 +38,7 @@ describe '@Collection', () ->
         @collection.getRequest().setOffset.restore()
         @collection.getRequest().setOrder.restore()
         @collection.getRequest().setFilters.restore()
+        @collection.getRequest().setFields.restore()
         @collection.getRequest().save.restore()
         @collection.getRequest().delete.restore()
         @collection.getRequest().fillRelation.restore()
@@ -48,11 +51,11 @@ describe '@Collection', () ->
             col3 = new Collection({model: Person})
 
             expect(col1.models[0].id).be.equal 4
-            expect(col1.config).be.deep.equal {model: Person}
+            expect(col1.config.model).be.equal Person
             expect(col2.models[0].id).be.equal 5
-            expect(col2.config).be.deep.equal {model: Person}
+            expect(col2.config.model).be.equal Person
             expect(col3.models.length).be.equal 0
-            expect(col3.config).be.deep.equal {model: Person}
+            expect(col3.config.model).be.equal Person
 
     describe '#reset', () ->
         it 'should reset models with new list', () ->
@@ -128,6 +131,12 @@ describe '@Collection', () ->
             @deferred.resolve([
                 {id: 4}
             ])
+
+        it 'should use required fields', ()->
+            @collection.load()
+            @collection.getRequest().setFields.called.should.be.ok
+            expect(@collection.getRequest().setFields.args[0][0]).be.ok
+            @collection.getRequest().setFields.calledWith(@collection.config.fields).should.be.ok
 
         it 'should use filters', ()->
             @collection.load()
@@ -252,13 +261,20 @@ describe '@Collection', () ->
         it 'should load relations via data-request', () ->
             @collection.require('job', 'tasks')
             expect(@collection.getRequest().fillRelation.called).to.be.ok
-            expect(@collection.getRequest().fillRelation.calledWith @collection.models, 'job').to.be.ok
-            expect(@collection.getRequest().fillRelation.calledWith @collection.models, 'tasks').to.be.ok
+            expect(@collection.getRequest().fillRelation.calledWith @collection, 'job', []).to.be.ok
+            expect(@collection.getRequest().fillRelation.calledWith @collection, 'tasks', []).to.be.ok
 
         it 'should returns promise', () ->
             expect(@collection.require('job', 'tasks')).to.be.instanceof  @deferred.promise.constructor
 
-        it 'should pass collection as first parameter of promise'
+        it 'should pass collection as first parameter of promise', (done) ->
+            col = @collection
+            col.require('job', 'tasks').then (res) ->
+                expect(res).be.equal col
+                done()
+            .fail(done)
+
+            @deferred.resolve()
 
     describe '#toJSON', () ->
         it 'should return models', () ->

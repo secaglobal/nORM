@@ -29,7 +29,7 @@ describe '@SQLDataRequest', () ->
         @request = new MysqlDataRequest(@proxy)
         @queryBuilder = new MysqlQueryBuilder()
 
-        @models = new Collection(
+        @people = new Collection(
           [
               {id: 4, name: 'jako', age: 20, jobId: 1},
               {name: 'mona'},
@@ -39,7 +39,9 @@ describe '@SQLDataRequest', () ->
               {id: 7, name: 'fifa', jobId: 5},
           ],
           {model: Person}
-        ).models
+        )
+
+        @models = @people.models
 
         @tasks = new Collection([
             {id: 12, title: 'Copy paper'}
@@ -149,13 +151,13 @@ describe '@SQLDataRequest', () ->
                             .setFilters({id: {$in: [1, 2, 5]}})
                             .compose()
 
-            @request.fillManyToOneRelation @models, 'job'
+            @request.fillManyToOneRelation @people, 'job'
             @proxy.perform.calledWith(searchQuery).should.be.ok
 
         it 'should assign result to appropriate model', (done) ->
             _this = @
 
-            @request.fillManyToOneRelation(@models, 'job').then () ->
+            @request.fillManyToOneRelation(@people, 'job').then () ->
                 try
                     expect(_this.models[0].job).to.be.ok
                     expect(_this.models[0].job).instanceof Model
@@ -174,7 +176,7 @@ describe '@SQLDataRequest', () ->
             @deferred.resolve [{id: 1}, {id: 2}]
 
         it 'should return promise', () ->
-            res = @request.fillManyToOneRelation(@models, 'job')
+            res = @request.fillManyToOneRelation(@people, 'job')
             expect(res).to.be.instanceof Q.defer().promise.constructor
 
     describe '#fillOneToManyRelation', () ->
@@ -184,13 +186,13 @@ describe '@SQLDataRequest', () ->
                 .setFilters({personId: {$in: [4, 5, 7]}})
                 .compose()
 
-            @request.fillOneToManyRelation @models, 'cars'
+            @request.fillOneToManyRelation @people, 'cars'
             @proxy.perform.calledWith(searchQuery).should.be.ok
 
         it 'should assign result to appropriate model', (done) ->
             _this = @
 
-            @request.fillOneToManyRelation(@models, 'cars').then () ->
+            @request.fillOneToManyRelation(@people, 'cars').then () ->
                 try
                     expect(_this.models[0].cars).to.be.ok
                     expect(_this.models[0].cars.length).to.be.equal 1
@@ -215,7 +217,7 @@ describe '@SQLDataRequest', () ->
             ]
 
         it 'should return promise', () ->
-            res = @request.fillOneToManyRelation(@models, 'cars')
+            res = @request.fillOneToManyRelation(@people, 'cars')
             expect(res).to.be.instanceof Q.defer().promise.constructor
 
     describe '#fillManyToManyRelation', () ->
@@ -227,7 +229,7 @@ describe '@SQLDataRequest', () ->
                 .setFilters(filters)
                 .compose()
 
-            @request.fillManyToManyRelation @models, 'tasks'
+            @request.fillManyToManyRelation @people, 'tasks'
             @proxy.perform.calledWith(searchQuery).should.be.ok
 
         it 'should search in target table', (done) ->
@@ -237,7 +239,7 @@ describe '@SQLDataRequest', () ->
                 .setFilters({id: {$in: [7, 8, 9, 10]}})
                 .compose()
 
-            @request.fillManyToManyRelation(@models, 'tasks')
+            @request.fillManyToManyRelation(@people, 'tasks')
                 .then () ->
                     try
                         _this.proxy.perform.calledWith(searchQuery).should.be.ok
@@ -257,13 +259,13 @@ describe '@SQLDataRequest', () ->
             ]
 
         it 'should return promise', () ->
-            res = @request.fillManyToManyRelation(@models, 'tasks')
+            res = @request.fillManyToManyRelation(@people, 'tasks')
             expect(res).to.be.instanceof Q.defer().promise.constructor
 
         it 'should assign result to appropriate model', (done) ->
             _this = @
 
-            @request.fillManyToManyRelation(@models, 'tasks').then () ->
+            @request.fillManyToManyRelation(@people, 'tasks').then () ->
                 try
                     expect(_this.models[0].tasks).to.be.ok
                     expect(_this.models[0].tasks.length).to.be.equal 3

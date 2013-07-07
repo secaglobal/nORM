@@ -18,7 +18,7 @@ class Schema
             if  _.isArray(value[0])
                 @fields[attr] = {type: value[0][0], m2m: true, collection: true, external: true}
             else
-                @fields[attr] = {type: value[0], collection: true, external: value.prototype instanceof Model}
+                @fields[attr] = {type: value[0], collection: true, external: value[0].prototype instanceof Model}
         else if _.isFunction(value) #if model
             @fields[attr] = {type: value, external: value.prototype instanceof Model}
         else
