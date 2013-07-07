@@ -8,11 +8,15 @@ IModel = require("./imodel");
 class Collection extends Entity
     constructor: (models, @config = {}) ->
         super()
+        @models = []
+
+        if not _.isArray models
+            [models, @config] = [@config, models]
 
         if !@config.model and models.length and models[0] instanceof IModel
             @config.model = models[0].self
 
-        @reset(models)
+        @reset(models) if models.length
         @_request = DataProvider.createRequest(@config.model)
 
 
@@ -33,6 +37,26 @@ class Collection extends Entity
 
     setOrder: (order) ->
         @config.order = order
+        @
+
+    setFields: (fields) ->
+        @config.fields = []
+        @config.relations = {}
+        fields = _.toArray(arguments) if not _.isArray(fields)
+        schemaFields = @config.model.schema.fields
+
+        for field in fields
+            if (ind = field.indexOf('.')) > 0
+                subfield = field.substring(ind + 1);
+                field = field.substring(0, ind);
+
+            if schemaFields[field].external
+                if not @config.relations[field]
+                    @config.relations[field] = []
+                @config.relations[field].push subfield if subfield
+            else
+                @config.fields.push field
+
         @
 
     reset: (@models) ->
@@ -80,7 +104,7 @@ class Collection extends Entity
 
         for field in arguments
             if fields[field].type.prototype instanceof IModel
-                promises.push @_request.fillRelation(@models, field)
+                promises.push @_request.fillRelation(@, field)
 
         Q.allSettled(promises).then (results) ->
             results.forEach (result) ->
@@ -102,6 +126,24 @@ class Collection extends Entity
         @_request.find(@config.model).then (rows)->
             _this.total = rows.total if rows.total?
             _this.reset rows
+            _this._fillRelations()
+
+    _fillRelations: () ->
+        _this = @
+        promises = []
+        deferred = Q.defer()
+        relations = @config.relations || {}
+
+        for relation, fields  of relations
+            promises.push @_request.fillRelation(@, relation, fields)
+
+        Q.allSettled(promises).then (results) ->
+            results.forEach (result) ->
+                if result.state isnt "fulfilled"
+                    deferred.reject result.reason
+            deferred.resolve(_this)
+
+        deferred.promise
 
     save: () ->
         @_request.save(@models)

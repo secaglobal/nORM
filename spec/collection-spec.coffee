@@ -41,7 +41,18 @@ describe '@Collection', () ->
         @collection.getRequest().fillRelation.restore()
         @collection.getRequest().fillTotalCount.restore()
 
-    it 'all methods should receive just Collection, not an array'
+    describe '#constructor', () ->
+        it 'should recognize which parameters are models and config', () ->
+            col1 = new Collection([{id: 4}], {model: Person})
+            col2 = new Collection({model: Person}, [{id: 5}])
+            col3 = new Collection({model: Person})
+
+            expect(col1.models[0].id).be.equal 4
+            expect(col1.config).be.deep.equal {model: Person}
+            expect(col2.models[0].id).be.equal 5
+            expect(col2.config).be.deep.equal {model: Person}
+            expect(col3.models.length).be.equal 0
+            expect(col3.config).be.deep.equal {model: Person}
 
     describe '#reset', () ->
         it 'should reset models with new list', () ->
@@ -94,6 +105,22 @@ describe '@Collection', () ->
             @collection.load().then (col)->
                 try
                     _this.collection.should.be.equal col
+                    done()
+                catch err
+                    done err
+
+            @deferred.resolve([
+                {id: 4}
+            ])
+
+        it 'should request all requested relations', (done) ->
+            col = @collection
+            spy = col.getRequest().fillRelation
+
+            col.setFields('name','job', 'tasks.id').load().then ()->
+                try
+                    spy.calledWithExactly(col, 'job', []).should.be.ok
+                    spy.calledWithExactly(col, 'tasks', ['id']).should.be.ok
                     done()
                 catch err
                     done err
@@ -241,4 +268,21 @@ describe '@Collection', () ->
             ]
 
             expect(@collection.toJSON()).to.be.equal @collection.models
+
+    describe  '#setFields', () ->
+        it 'should be able to receive list of fields as array', () ->
+            @collection.setFields ['id', 'name']
+            expect(@collection.config.fields).be.deep.equal ['id', 'name']
+
+        it 'should be able to receive list of fields as arguents', () ->
+            @collection.setFields 'id', 'name'
+            expect(@collection.config.fields).be.deep.equal ['id', 'name']
+
+        it 'should separate model fields and relations fields', () ->
+            @collection.setFields 'id', 'name', 'job', 'tasks.title'
+            expect(@collection.config.fields).be.deep.equal ['id', 'name']
+            expect(@collection.config.relations).be.deep.equal
+                job : [],
+                tasks : ['title']
+
 

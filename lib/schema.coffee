@@ -16,11 +16,11 @@ class Schema
             @proxy = value
         else if _.isArray(value)
             if  _.isArray(value[0])
-                @fields[attr] = {type: value[0][0], m2m: true, collection: true}
+                @fields[attr] = {type: value[0][0], m2m: true, collection: true, external: true}
             else
-                @fields[attr] = {type: value[0], collection: true}
-        else if _.isFunction(value)
-            @fields[attr] = {type: value}
+                @fields[attr] = {type: value[0], collection: true, external: value.prototype instanceof Model}
+        else if _.isFunction(value) #if model
+            @fields[attr] = {type: value, external: value.prototype instanceof Model}
         else
             @fields[attr] = value
 
@@ -34,7 +34,7 @@ class Schema
         for field, config of @fields
             value = obj[field];
             for validator, params of config
-                if validator in ['collection', 'm2m']
+                if validator in ['collection', 'm2m', 'external']
                     continue
 
                 if validator is 'type'
@@ -43,7 +43,6 @@ class Schema
                         when Number then Validator.numeric value
                 else
                     Validator[validator](value, params)
-
 
 
 module.exports = Schema

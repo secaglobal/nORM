@@ -13,6 +13,7 @@ class SQLDataRequest extends DBDataRequest
 
     find: (model) ->
         builder = @_builder(model.schema.name)
+            .setFields(@_fields)
             .setFilters(@_filters or {})
             .setLimit(@_limit)
             .setOffset(@_offset)

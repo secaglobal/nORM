@@ -83,6 +83,16 @@ describe '@Mysql.QueryBuilder', () ->
         it 'should set order clouse', () ->
             @builder.setOrder({id: 1, name: -1}).compose().should.equal "select * from `Test` order by `id`,`name` desc"
 
+    describe '#setFields', () ->
+        it 'should be able to receive list of fields as array', () ->
+            expect(@builder.setFields(['id', 'name'])._fields).be.deep.equal ['id', 'name']
+
+        it 'should be able to receive list of fields as arguents', () ->
+            expect(@builder.setFields('id', 'name')._fields).be.deep.equal ['id', 'name']
+
+        it 'should set fields', () ->
+            @builder.setFields('id', 'name').compose().should.equal "select `id`,`name` from `Test`"
+
     describe '#compose', () ->
         it 'should compose select queries', () ->
             @builder.compose().should.equal 'select * from `Test`'

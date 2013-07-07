@@ -1,10 +1,11 @@
 Utils = require '../util'
-underscore = require 'underscore'
+_ = require 'underscore'
 SQLQueryBuilder = require '../sql-query-builder'
 
 class MysqlQueryBuilder extends SQLQueryBuilder
     constructor: (@_type = MysqlQueryBuilder.TYPE__SELECT) ->
         @_meta = []
+        @_fields = []
         @
 
     setType: (@_type) ->
@@ -16,7 +17,8 @@ class MysqlQueryBuilder extends SQLQueryBuilder
     setFilters: (@_filters) ->
         @
 
-    setFields: (@_fields) ->
+    setFields: (fields) ->
+        @_fields = if _.isArray(fields) then fields else _.toArray(arguments)
         @
 
     setLimit: (@_limit) ->
@@ -41,7 +43,7 @@ class MysqlQueryBuilder extends SQLQueryBuilder
         @
 
     hasMeta: (flag) ->
-        underscore.contains @_meta, flag
+        _.contains @_meta, flag
 
     compose: () ->
         @["_compose#{@_type}"]()
@@ -56,8 +58,10 @@ class MysqlQueryBuilder extends SQLQueryBuilder
 
         meta = ''
         meta = @_meta.join(' ') + ' ' if @_meta.length
+        fields = @_composeFieldsClouse()
+        fields = '*' if not fields
 
-        "select #{meta}* from `#{@_table}`#{parts}"
+        "select #{meta}#{fields} from `#{@_table}`#{parts}"
 
     _composeUpdate: () ->
         valuesRep = ("`#{n}`=#{MysqlQueryBuilder._escape(v)}" for n, v of @_newValues).join(',')
@@ -68,15 +72,17 @@ class MysqlQueryBuilder extends SQLQueryBuilder
         "delete from `#{@_table}`#{@_composeWhereClouse()}#{@_composeLimitClouse()}"
 
     _composeInsert: () ->
-        fields = (MysqlQueryBuilder._escapeField(field)for field in @_fields).join(',')
+        fields = @_composeFieldsClouse()
         values = (MysqlQueryBuilder._escape(set) for set in @_insertValues).join(',')
         "insert into `#{@_table}`(#{fields}) values#{values}"
+
+    _composeFieldsClouse: () ->
+        (MysqlQueryBuilder._escapeField(field)for field in @_fields).join(',')
 
     _composeWhereClouse: () ->
         whereClouse = ''
         whereClouse = (MysqlQueryBuilder._convertFilters @_filters) if @_filters
         whereClouse = " where #{whereClouse}" if whereClouse.length
-        return whereClouse
 
     _composeLimitClouse: () ->
         if @_limit then " limit #{parseInt(@_limit)}" else ''

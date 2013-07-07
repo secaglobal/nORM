@@ -25,16 +25,16 @@ describe '@Schema', () ->
 
         it 'should handle types', () ->
             schema = new Schema 'Car', title: String, nr: Number
-            expect(schema.fields.title).be.deep.equal {type: String}
-            expect(schema.fields.nr).be.deep.equal {type: Number}
+            expect(schema.fields.title).be.deep.equal {type: String, external: false}
+            expect(schema.fields.nr).be.deep.equal {type: Number, external: false}
 
         it 'should handle collections', () ->
             schema = new Schema 'Car', parts: [Number]
-            expect(schema.fields.parts).be.deep.equal {type: Number, collection: true}
+            expect(schema.fields.parts).be.deep.equal {type: Number, collection: true, external: false}
 
         it 'should handle Many-to-Many relations', () ->
             schema = new Schema 'Car', parts: [[String]]
-            expect(schema.fields.parts).be.deep.equal {type: String, m2m: true, collection: true}
+            expect(schema.fields.parts).be.deep.equal {type: String, m2m: true, collection: true, external: true}
 
         it 'should handler _proxy attribute', () ->
             schema = new Schema 'Car', _proxy: 'proxy'
@@ -45,8 +45,8 @@ describe '@Schema', () ->
             expect(schema.defaultFieldName).be.deep.equal 'carId'
 
     describe '#validate', () ->
-        it 'should skip collection and type fields', () ->
-            schema = new Schema 'Car', name: {type: String, collection: false}
+        it 'should skip collection, type and external fields', () ->
+            schema = new Schema 'Car', name: {type: String, collection: false, external: false}
             expect(schema.validate({name: 'Valery'})).be.ok
 
         it 'should execute all validators', () ->

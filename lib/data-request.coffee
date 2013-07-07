@@ -2,9 +2,19 @@ Q = require 'q'
 
 class DataRequest
     constructor: (@_proxy) ->
+        @_fields = []
+        @_filters = []
+        @_order = []
+        @_limit = 0
+        @_offset = 0
+        @
 
     getProxy: () ->
         @_proxy
+
+    setFields: (fields) ->
+        @_fields = if _.isArray(fields) then fields else _.toArray(arguments)
+        @
 
     setFilters: (@_filters) ->
         @
