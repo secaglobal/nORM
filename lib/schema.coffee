@@ -31,18 +31,26 @@ class Schema
         @
 
     validate: (obj) ->
+        res = []
         for field, config of @fields
             value = obj[field];
             for validator, params of config
                 if validator in ['collection', 'm2m', 'external']
                     continue
 
+                validatorRes = true
+
                 if validator is 'type'
-                    switch params
-                        when String then Validator.string value
-                        when Number then Validator.numeric value
+                    if value?
+                        switch params
+                            when String then validatorRes = Validator.string value
+                            when Number then validatorRes = Validator.numeric value
                 else
-                    Validator[validator](value, params)
+                    validatorRes = Validator[validator](value, params)
+
+                if not (validatorRes is true)
+                    res.push field: field, error: validatorRes
+        return if res.length then res else true
 
 
 module.exports = Schema
