@@ -90,7 +90,7 @@ describe '@Schema', () ->
 
         it 'should ignore field validation if field is null or undefined', () ->
             schema = new Schema 'Car', age: Number
-            console.log schema.validate {}
+
             expect(schema.validate {}).be.equal true
             expect(schema.validate {age: null}).be.equal true
 
