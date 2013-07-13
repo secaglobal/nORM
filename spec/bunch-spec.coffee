@@ -37,7 +37,7 @@ describe '@Bunch', () ->
     describe '#save', () ->
         it 'should save all models', () ->
             @bunch.save()
-            @bunch.getRequest().save.calledWith(@bunch.models).should.be.ok
+            @bunch.getRequest().save.calledWith(@bunch).should.be.ok
 
         it 'should save many-to-many relations', () ->
             @bunch.save()

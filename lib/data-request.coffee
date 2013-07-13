@@ -53,7 +53,7 @@ class DataRequest
     fillVirtualOneToManyRelation: (models, relation) ->
         throw 'Absract method'
 
-    fillRelation: (models, relation) ->
+    fillRelation: (models, relation, fields) ->
         if not models.length
             deferred = Q.defer()
             deferred.resolve()
@@ -62,11 +62,11 @@ class DataRequest
         config = models.config.model.schema.fields[relation]
 
         if config.m2m
-            return @fillManyToManyRelation models, relation
+            return @fillManyToManyRelation models, relation, fields
         else if config.collection
-            return @fillOneToManyRelation models, relation
+            return @fillOneToManyRelation models, relation, fields
         else
-            return @fillManyToOneRelation models, relation
+            return @fillManyToOneRelation models, relation, fields
 
 
 module.exports = DataRequest;

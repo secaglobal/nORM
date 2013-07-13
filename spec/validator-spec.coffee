@@ -3,17 +3,17 @@ Validator = require("#{LIBS_PATH}/validator");
 
 describe '@Validator', () ->
     describe 'Common', () ->
-        describe '#required', () ->
+        describe '#require', () ->
             it 'should return true if object is not null', () =>
-                expect(Validator.required 1).be.equal true
-                expect(Validator.required {}).be.equal true
-                expect(Validator.required 0).be.equal true
-                expect(Validator.required 'null').be.equal true
-                expect(Validator.required true).be.equal true
-                expect(Validator.required false).be.equal true
+                expect(Validator.require 1).be.equal true
+                expect(Validator.require {}).be.equal true
+                expect(Validator.require 0).be.equal true
+                expect(Validator.require 'null').be.equal true
+                expect(Validator.require true).be.equal true
+                expect(Validator.require false).be.equal true
 
             it 'should return false if object is null', () =>
-                expect(Validator.required(null).code).be.equal 'VALIDATOR__ERROR__REQUIRE'
+                expect(Validator.require(null).code).be.equal 'VALIDATOR__ERROR__REQUIRE'
 
     describe 'Number', () ->
         describe '#numeric', () ->

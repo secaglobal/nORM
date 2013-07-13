@@ -31,6 +31,7 @@ describe '@Collection', () ->
         sinon.stub(@collection.getRequest(), 'setFields').returns @collection.getRequest()
         sinon.stub(@collection.getRequest(), 'fillRelation').returns @deferred.promise
         sinon.spy(@collection.getRequest(), 'fillTotalCount')
+        sinon.spy(Person.schema, 'validate')
 
     afterEach () ->
         @collection.getRequest().find.restore()
@@ -43,6 +44,7 @@ describe '@Collection', () ->
         @collection.getRequest().delete.restore()
         @collection.getRequest().fillRelation.restore()
         @collection.getRequest().fillTotalCount.restore()
+        Person.schema.validate.restore();
 
     describe '#constructor', () ->
         it 'should recognize which parameters are models and config', () ->
@@ -205,10 +207,19 @@ describe '@Collection', () ->
             ]
             @collection.save()
 
-            @collection.getRequest().save.calledWith(@collection.models).should.be.ok
+            @collection.getRequest().save.calledWith(@collection).should.be.ok
 
         it 'should return promise', () ->
             expect(@collection.save()).to.be.deep.instanceof @deferred.promise.constructor
+
+        it 'should throw exception if validation has not been passed', () ->
+            col = @collection.reset [
+                {id: 1, name: 'lego'} ,
+                {}
+            ]
+
+            expect(() -> col.save()).to.throw()
+            @collection.getRequest().save.called.should.be.not.ok
 
     describe '#delete', () ->
         it 'should pass all models to @DataRequest#delete', () ->
@@ -218,7 +229,7 @@ describe '@Collection', () ->
             ]
             @collection.delete()
 
-            @collection.getRequest().delete.calledWith(@collection.models).should.be.ok
+            @collection.getRequest().delete.calledWith(@collection).should.be.ok
 
         it 'should return promise', () ->
             expect(@collection.delete()).to.be.instanceof @deferred.promise.constructor
@@ -300,5 +311,35 @@ describe '@Collection', () ->
             expect(@collection.config.relations).be.deep.equal
                 job : [],
                 tasks : ['title']
+
+    describe '#validete', () ->
+        it 'should validate models', () ->
+            @collection.reset([{name: 'Phil'}, {name: 'Rex'}]).validate()
+            expect(Person.schema.validate.called).be.ok;
+            expect(Person.schema.validate.args.length).be.equal @collection.length
+            expect(Person.schema.validate.args[1]).be.deep.equal [@collection.at(1), false];
+
+        it 'should transmit parameter for recursive validation', () ->
+            @collection.reset([{name: 'Phil'}, {name: 'Rex'}]).validate(true)
+            expect(Person.schema.validate.called).be.ok;
+            expect(Person.schema.validate.args.length).be.equal @collection.length
+            expect(Person.schema.validate.args[1]).be.deep.equal [@collection.at(1), true];
+
+        it 'should return errors if available', () ->
+            res = @collection.reset([{name: 'Phil'}, {}]).validate()
+
+            expect(res[1][0].field).be.equal 'name'
+            expect(res[1][0].error.code).be.equal "VALIDATOR__ERROR__REQUIRE"
+
+        it 'should return `true` if no errors', () ->
+            expect(@collection.reset([{name: 'Phil'}, {name: 'Rex'}]).validate()).be.equal true
+
+    describe '#remove', () ->
+        it 'should remove model from collection', () ->
+            @collection.reset([{name: 'Phil'}, {name: 'Rex'}])
+            @collection.remove(@collection.findWhere(name: 'Phil'))
+            expect(@collection.length).be.equal 1
+            expect(@collection.first().name).be.equal 'Rex'
+
 
 

@@ -1,5 +1,6 @@
 Model = require("#{LIBS_PATH}/model");
 Collection = require("#{LIBS_PATH}/collection");
+SQLDataRequest = require("#{LIBS_PATH}/sql-data-request");
 Q = require 'q'
 Person = require('./models')['Person']
 
@@ -14,9 +15,15 @@ describe '@Model', () ->
         @deferred = Q.defer()
 
         sinon.stub(Collection.prototype, 'require').returns @deferred.promise
+        sinon.stub(SQLDataRequest.prototype, 'save').returns @deferred.promise
+        sinon.stub(SQLDataRequest.prototype, 'delete').returns @deferred.promise
+        sinon.spy(Person.schema, 'validate')
 
     afterEach () ->
         Collection.prototype.require.restore()
+        SQLDataRequest.prototype.save.restore()
+        SQLDataRequest.prototype.delete.restore()
+        Person.schema.validate.restore();
 
     describe '#constructor', () ->
         it 'should provide access to first level fields', () ->
@@ -96,3 +103,56 @@ describe '@Model', () ->
         it 'should insert all fields from schema', () ->
             person = new Person({id: 4, name: 'name', hasCar: true, _private: true})
             expect(person.toJSON()).to.be.deep.equal {id:4, name:"name"}
+
+    describe '#validate', () ->
+        it 'should validate model', () ->
+            @stive.validate()
+            expect(Person.schema.validate.called).be.ok;
+            expect(Person.schema.validate.args[0]).be.deep.equal [@stive, false];
+
+        it 'should transmit parameter for recursive validation', () ->
+            @stive.validate(true)
+            expect(Person.schema.validate.called).be.ok;
+            expect(Person.schema.validate.args[0]).be.deep.equal [@stive, true];
+
+        it 'should return errors if available', () ->
+            stive = new Person()
+            res = stive.validate()
+
+            expect(res.length).be.equal 1
+            expect(res[0].field).be.equal 'name'
+            expect(res[0].error.code).be.equal "VALIDATOR__ERROR__REQUIRE"
+
+        it 'should return `true` if no errors', () ->
+            expect(@stive.validate()).be.equal true
+
+    describe '#save', () ->
+        it 'should use datarequest for saving', () ->
+            @stive.save();
+            expect(SQLDataRequest.prototype.save.called).be.ok
+            expect(SQLDataRequest.prototype.save.calledWith(new Collection([@stive]))).be.ok
+
+        it 'should return promise', () ->
+            expect(@stive.save()).to.be.deep.instanceof @deferred.promise.constructor
+
+        it 'should throw exception if validation has not been passed', () ->
+            stive = new Person({});
+
+            expect(() -> stive.save()).to.throw()
+            expect(SQLDataRequest.prototype.save.called).be.not.ok
+
+    describe '#delete', () ->
+        it 'should use datarequest for delition', () ->
+            @stive.delete();
+            expect(SQLDataRequest.prototype.delete.called).be.ok
+            expect(SQLDataRequest.prototype.delete.calledWith(new Collection([@stive]))).be.ok
+
+        it 'should return promise', () ->
+            expect(@stive.delete()).to.be.deep.instanceof @deferred.promise.constructor
+
+        it 'should replace itself from collection', () ->
+            col = new Collection([@stive, {name: 'Alex'}])
+            @stive.delete();
+            expect(col.length).be.equal 1
+            expect(col.first().name).be.equal 'Alex'
+

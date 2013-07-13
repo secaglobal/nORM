@@ -2,8 +2,8 @@ _ = require 'underscore'
 Util = require './util'
 
 class Validator
-    required: (val) ->
-        val isnt null or @error('VALIDATOR__ERROR__REQUIRE', _.toArray(arguments))
+    require: (val) ->
+        val? or @error('VALIDATOR__ERROR__REQUIRE', _.toArray(arguments))
 
     numeric: (val) ->
         if _.isString(val)

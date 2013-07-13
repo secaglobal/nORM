@@ -3,6 +3,7 @@ _ = require 'underscore'
 Util = require './util'
 IModel = require("./imodel");
 Collection = require("./collection");
+DataProvider = require './data-provider'
 
 class Model extends IModel
     constructor: (attributes) ->
@@ -41,6 +42,17 @@ class Model extends IModel
         for field of fields
             changes[field] = @[field] if @original[field] != @[field]
         return if _.isEmpty(changes) then false else changes
+
+    validate: (isRecurcive = false) ->
+        @self.schema.validate(@, isRecurcive);
+
+    save: () ->
+        throw err if (err = @validate()) isnt true
+        DataProvider.createRequest(@self).save(new Collection([@]))
+
+    delete: () ->
+        @collection.remove(@) if @collection
+        DataProvider.createRequest(@self).delete(new Collection([@]))
 
     @getProxyAlias: () ->
         return @schema.proxy

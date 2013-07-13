@@ -86,11 +86,17 @@ class Collection extends Entity
     pluck: (field) ->
         _.pluck(@models, field)
 
-    isEmpty: () ->
-        _.isEmpty(@models)
+    filter: (fn) ->
+        _.filter(@models, fn)
+
+    map: (field) ->
+        _.map(@models, field)
 
     forEach: (fn) ->
         _.forEach(@models, fn)
+
+    isEmpty: () ->
+        _.isEmpty(@models)
 
     toJSON: () ->
         @models
@@ -98,6 +104,10 @@ class Collection extends Entity
     refreshLength: () ->
         @length = @models.length
         @
+
+    remove: (model) ->
+        @models = _.without(@models, model)
+        @refreshLength()
 
     require: () ->
         fields = @config.model.schema.fields
@@ -139,12 +149,24 @@ class Collection extends Entity
 
         deferred.promise
 
+    validate: (isRecursive = false) ->
+        res = {}
+        noErrors = true
+
+        for model, i in @models
+            errors = model.validate(isRecursive)
+            res[i] = errors if errors isnt true
+            noErrors = false if errors isnt true
+
+        return noErrors or res
+
     save: () ->
-        @_request.save(@models)
+        throw err if (err = @validate()) isnt true
+        @_request.save(@)
 
     delete: () ->
         _this = @
-        @_request.delete(@models).then ()->
+        @_request.delete(@).then ()->
             _this.reset([])
 
 module.exports = Collection

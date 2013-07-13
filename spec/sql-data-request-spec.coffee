@@ -14,18 +14,18 @@ Task = models.Task
 
 describe '@SQLDataRequest', () ->
     assignPromise = () ->
-        if not @proxy.perform.restore
-            sinon.stub(@proxy, 'perform')
+        if not Proxy.prototype.perform.restore
+            sinon.stub(Proxy.prototype, 'perform')
 
         _this = @
         @deferred = Q.defer()
         promise = @deferred.promise
-        @proxy.perform.returns promise;
+        Proxy.prototype.perform.returns promise;
         promise.then () ->
             assignPromise.call _this
 
     beforeEach () ->
-        @proxy = dataProvider.getProxy Person
+        @proxy = dataProvider.getProxy(Person)
         @request = new MysqlDataRequest(@proxy)
         @queryBuilder = new MysqlQueryBuilder()
 
@@ -83,7 +83,7 @@ describe '@SQLDataRequest', () ->
             @models[5].name = 'fifaEdited'
             @models[5].age = 40
 
-            @request.save @models
+            @request.save @people
 
             @proxy.perform.calledWith(updateQuery1).should.be.ok
             @proxy.perform.calledWith(updateQuery2).should.be.ok
@@ -100,14 +100,14 @@ describe '@SQLDataRequest', () ->
                 [30, 'mona3']
             ]).compose()
 
-            @request.save @models, false
+            @request.save @people, false
 
             @proxy.perform.calledWith(insertQuery1).should.be.ok
             @proxy.perform.calledWith(insertQuery2).should.be.ok
 
         it 'should set ids for new models', (done) ->
             self = @
-            @request.save(@models).then () ->
+            @request.save(@people).then () ->
                 try
                     col =  new Collection(self.models, {model: Person})
                     col.where {id: undefined}
@@ -123,7 +123,7 @@ describe '@SQLDataRequest', () ->
 
 
         it 'should return promise', () ->
-            expect(@request.save @models).to.be.instanceof Q.allSettled(
+            expect(@request.save @people).to.be.instanceof Q.allSettled(
               []).constructor
 
     describe '#delete', () ->
@@ -134,14 +134,13 @@ describe '@SQLDataRequest', () ->
                             .setFilters({id: {$in: [4, 5, 7]}})
                             .compose()
 
-            @request.delete @models
+            @request.delete @people
 
             @proxy.perform.calledWith(deleteQuery).should.be.ok
 
 
         it 'should return promise', () ->
-            @request.delete @models
-            expect(@request.delete @models).to.be.instanceof Q.defer().promise.constructor
+            expect(@request.delete @people).to.be.instanceof Q.defer().promise.constructor
 
 
     describe '#fillManyToOneRelation', () ->
@@ -152,32 +151,44 @@ describe '@SQLDataRequest', () ->
                             .compose()
 
             @request.fillManyToOneRelation @people, 'job'
-            @proxy.perform.calledWith(searchQuery).should.be.ok
+
+            @proxy.perform.called.should.be.ok
+            @proxy.perform.args[0][0].compose().should.be.equal searchQuery
 
         it 'should assign result to appropriate model', (done) ->
             _this = @
 
             @request.fillManyToOneRelation(@people, 'job').then () ->
-                try
-                    expect(_this.models[0].job).to.be.ok
-                    expect(_this.models[0].job).instanceof Model
-                    _this.models[0].job.id.should.equal 1
+                expect(_this.models[0].job).to.be.ok
+                expect(_this.models[0].job).instanceof Model
+                _this.models[0].job.id.should.equal 1
 
-                    expect(_this.models[4].job).to.be.ok
-                    expect(_this.models[4].job).instanceof Model
-                    _this.models[4].job.id.should.equal 2
+                expect(_this.models[4].job).to.be.ok
+                expect(_this.models[4].job).instanceof Model
+                _this.models[4].job.id.should.equal 2
 
-                    expect(_this.models[5].job).to.be.not.ok
+                expect(_this.models[5].job).to.be.not.ok
 
-                    done()
-                catch err
-                    done err
+                done()
+            .fail(done)
 
             @deferred.resolve [{id: 1}, {id: 2}]
 
         it 'should return promise', () ->
             res = @request.fillManyToOneRelation(@people, 'job')
             expect(res).to.be.instanceof Q.defer().promise.constructor
+
+        it 'should set required fields', () ->
+            searchQuery = @queryBuilder
+                .setTable(Job.schema.name)
+                .setFields('id', 'title')
+                .setFilters({id: {$in: [1, 2, 5]}})
+                .compose()
+
+            @request.fillManyToOneRelation @people, 'job', ['id', 'title']
+
+            @proxy.perform.called.should.be.ok
+            @proxy.perform.args[0][0].compose().should.be.equal searchQuery
 
     describe '#fillOneToManyRelation', () ->
         it 'should create query end execute it', () ->
@@ -187,7 +198,9 @@ describe '@SQLDataRequest', () ->
                 .compose()
 
             @request.fillOneToManyRelation @people, 'cars'
-            @proxy.perform.calledWith(searchQuery).should.be.ok
+
+            @proxy.perform.called.should.be.ok
+            @proxy.perform.args[0][0].compose().should.be.equal searchQuery
 
         it 'should assign result to appropriate model', (done) ->
             _this = @
@@ -220,6 +233,18 @@ describe '@SQLDataRequest', () ->
             res = @request.fillOneToManyRelation(@people, 'cars')
             expect(res).to.be.instanceof Q.defer().promise.constructor
 
+        it 'should set required fields', () ->
+            searchQuery = @queryBuilder
+                .setTable(Car.schema.name)
+                .setFields('id', 'title')
+                .setFilters({personId: {$in: [4, 5, 7]}})
+                .compose()
+
+            @request.fillOneToManyRelation @people, 'cars', ['id', 'title']
+
+            @proxy.perform.called.should.be.ok
+            @proxy.perform.args[0][0].compose().should.be.equal searchQuery
+
     describe '#fillManyToManyRelation', () ->
         it 'should search in crosstable', () ->
             filters = {}
@@ -242,7 +267,7 @@ describe '@SQLDataRequest', () ->
             @request.fillManyToManyRelation(@people, 'tasks')
                 .then () ->
                     try
-                        _this.proxy.perform.calledWith(searchQuery).should.be.ok
+                        _this.proxy.perform.args[1][0].compose().should.be.equal searchQuery
                         done()
                     catch e
                         done(e)
@@ -283,6 +308,30 @@ describe '@SQLDataRequest', () ->
                     done()
                 catch err
                     done err
+
+            @deferred.promise.then () ->
+                _this.deferred.resolve [{id: 7}, {id: 8}, {id: 9}, {id: 10}]
+
+            @deferred.resolve [
+                {personId: 4, taskId: 7},
+                {personId: 4, taskId: 8},
+                {personId: 4, taskId: 9},
+                {personId: 7, taskId: 10},
+            ]
+
+        it 'should set required fields', (done) ->
+            _this = @
+            searchQuery = @queryBuilder
+                .setTable(Task.schema.name)
+                .setFields('id', 'title')
+                .setFilters({id: {$in: [7, 8, 9, 10]}})
+                .compose()
+
+            @request.fillManyToManyRelation(@people, 'tasks', ['id', 'title'])
+                .then () ->
+                    _this.proxy.perform.args[1][0].compose().should.be.equal searchQuery
+                    done()
+                .fail done
 
             @deferred.promise.then () ->
                 _this.deferred.resolve [{id: 7}, {id: 8}, {id: 9}, {id: 10}]

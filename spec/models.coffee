@@ -21,7 +21,7 @@ class Car  extends Model
 class Person extends Model
     @schema: new Schema 'Person',
         id: Number
-        name: String,
+        name: {type: String, require: true},
         age: Number,
         jobId: Number,
         job: Job,
