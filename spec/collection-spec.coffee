@@ -317,19 +317,16 @@ describe '@Collection', () ->
             @collection.reset([{name: 'Phil'}, {name: 'Rex'}]).validate()
             expect(Person.schema.validate.called).be.ok;
             expect(Person.schema.validate.args.length).be.equal @collection.length
-            expect(Person.schema.validate.args[1]).be.deep.equal [@collection.at(1), false];
+            expect(Person.schema.validate.args[1]).be.deep.equal [@collection.at(1), null];
 
-        it 'should transmit parameter for recursive validation', () ->
-            @collection.reset([{name: 'Phil'}, {name: 'Rex'}]).validate(true)
-            expect(Person.schema.validate.called).be.ok;
-            expect(Person.schema.validate.args.length).be.equal @collection.length
-            expect(Person.schema.validate.args[1]).be.deep.equal [@collection.at(1), true];
+        it 'should return `false` if no errors', () ->
+            expect(@collection.reset([{name: 'Phil'}, {}]).validate()).be.not.ok
 
-        it 'should return errors if available', () ->
-            res = @collection.reset([{name: 'Phil'}, {}]).validate()
+        it 'should fill errors if available', () ->
+            @collection.reset([{name: 'Phil'}, {}]).validate(errors = {})
 
-            expect(res[1][0].field).be.equal 'name'
-            expect(res[1][0].error.code).be.equal "VALIDATOR__ERROR__REQUIRE"
+            expect(errors[1][0].field).be.equal 'name'
+            expect(errors[1][0].error.code).be.equal "VALIDATOR__ERROR__REQUIRE"
 
         it 'should return `true` if no errors', () ->
             expect(@collection.reset([{name: 'Phil'}, {name: 'Rex'}]).validate()).be.equal true

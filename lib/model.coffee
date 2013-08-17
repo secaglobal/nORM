@@ -43,8 +43,8 @@ class Model extends IModel
             changes[field] = @[field] if @original[field] != @[field]
         return if _.isEmpty(changes) then false else changes
 
-    validate: (isRecurcive = false) ->
-        @self.schema.validate(@, isRecurcive);
+    validate: (errors = null) ->
+        @self.schema.validate(@, errors);
 
     save: () ->
         throw err if (err = @validate()) isnt true

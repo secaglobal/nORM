@@ -149,16 +149,17 @@ class Collection extends Entity
 
         deferred.promise
 
-    validate: (isRecursive = false) ->
-        res = {}
+    validate: (errors = null) ->
         noErrors = true
 
         for model, i in @models
-            errors = model.validate(isRecursive)
-            res[i] = errors if errors isnt true
-            noErrors = false if errors isnt true
+            modelErrors = [] if errors
 
-        return noErrors or res
+            if not model.validate(modelErrors)
+                errors[i] = modelErrors if errors
+                noErrors = false
+
+        return noErrors
 
     save: () ->
         throw err if (err = @validate()) isnt true

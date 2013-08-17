@@ -108,23 +108,27 @@ describe '@Model', () ->
         it 'should validate model', () ->
             @stive.validate()
             expect(Person.schema.validate.called).be.ok;
-            expect(Person.schema.validate.args[0]).be.deep.equal [@stive, false];
+            console.log Person.schema.validate.args[0]
+            expect(Person.schema.validate.args[0]).be.deep.equal [@stive, null];
 
         it 'should transmit parameter for recursive validation', () ->
             @stive.validate(true)
             expect(Person.schema.validate.called).be.ok;
             expect(Person.schema.validate.args[0]).be.deep.equal [@stive, true];
 
+        it 'should return `false` if has errors', () ->
+            expect(new Person().validate()).be.not.ok
+
         it 'should return errors if available', () ->
             stive = new Person()
-            res = stive.validate()
+            res = stive.validate(errors = [])
 
-            expect(res.length).be.equal 1
-            expect(res[0].field).be.equal 'name'
-            expect(res[0].error.code).be.equal "VALIDATOR__ERROR__REQUIRE"
+            expect(errors.length).be.equal 1
+            expect(errors[0].field).be.equal 'name'
+            expect(errors[0].error.code).be.equal "VALIDATOR__ERROR__REQUIRE"
 
         it 'should return `true` if no errors', () ->
-            expect(@stive.validate()).be.equal true
+            expect(@stive.validate()).be.ok
 
     describe '#save', () ->
         it 'should use datarequest for saving', () ->

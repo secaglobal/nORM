@@ -15,8 +15,8 @@ global.sinon = require 'sinon'
 dataProvider.registerProxy("default", new MysqlProxy(
     host      : 'localhost',
     user      : 'test',
-    password  : 'testpass',
-    database  : 'norm_test',
+    password  : '',
+    database  : 'test_norm',
     charset   : 'utf8',
 #    debug     : ['ComQueryPacket']
 #    debug     : ['ComQueryPacket', 'RowDataPacket']

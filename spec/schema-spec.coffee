@@ -97,16 +97,26 @@ describe '@Schema', () ->
             expect(schema.validate {}).be.equal true
             expect(schema.validate {age: null}).be.equal true
 
-        it 'should return list of fields with thier errors', () ->
+        it 'should return false if validation completed with errors', () ->
             schema = new Schema 'Car',
                 name: {type: String, require: true, minLen: 10}
                 registered: Date
 
             res = schema.validate {registered: new Date('2010-03-14'), name: 'Short'}
 
-            expect(res.length).be.equal 1
-            expect(res[0].field).be.equal 'name'
-            expect(res[0].error.code).be.equal "VALIDATOR__ERROR__MIN_LEN"
+            expect(res).be.not.ok
+
+
+        it 'should fill second argument by errors if provided', () ->
+            schema = new Schema 'Car',
+                name: {type: String, require: true, minLen: 10}
+                registered: Date
+
+            schema.validate {registered: new Date('2010-03-14'), name: 'Short'}, errors = []
+
+            expect(errors.length).be.equal 1
+            expect(errors[0].field).be.equal 'name'
+            expect(errors[0].error.code).be.equal "VALIDATOR__ERROR__MIN_LEN"
 
 
 

@@ -33,8 +33,9 @@ class Schema
     getProxy: () ->
         @
 
-    validate: (obj, isRecurcive) ->
-        res = []
+    validate: (obj, errors) ->
+        hasErrors = false
+
         for field, config of @fields
             value = obj[field];
 
@@ -54,9 +55,10 @@ class Schema
                 else
                     validatorRes = Validator[validator](value, params)
 
-                if not (validatorRes is true)
-                    res.push field: field, error: validatorRes
-        return if res.length then res else true
+                if validatorRes isnt true
+                    hasErrors = true
+                    errors.push field: field, error: validatorRes if errors
+        return !hasErrors
 
 
 module.exports = Schema

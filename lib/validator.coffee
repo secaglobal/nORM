@@ -1,7 +1,16 @@
 _ = require 'underscore'
 Util = require './util'
 
+class ValidatorError
+    constructor: (@code, @params) ->
+        @isError = true
+
+    toString: () ->
+        @code
+
 class Validator
+    @Error: ValidatorError
+
     require: (val) ->
         val? or @error('VALIDATOR__ERROR__REQUIRE', _.toArray(arguments))
 
@@ -59,11 +68,5 @@ class Validator
     error: (type, params) ->
         new ValidatorError(type, params)
 
-class ValidatorError
-    constructor: (@code, @params) ->
-        @isError = true
-
-    toString: () ->
-        @code
 
 module.exports = new Validator
