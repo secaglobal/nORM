@@ -107,14 +107,13 @@ describe '@Model', () ->
     describe '#validate', () ->
         it 'should validate model', () ->
             @stive.validate()
-            expect(Person.schema.validate.called).be.ok;
-            console.log Person.schema.validate.args[0]
-            expect(Person.schema.validate.args[0]).be.deep.equal [@stive, null];
+            expect(Person.schema.validate.called).be.ok
+            expect(Person.schema.validate.args[0]).be.deep.equal [@stive, null]
 
         it 'should transmit parameter for recursive validation', () ->
             @stive.validate(true)
-            expect(Person.schema.validate.called).be.ok;
-            expect(Person.schema.validate.args[0]).be.deep.equal [@stive, true];
+            expect(Person.schema.validate.called).be.ok
+            expect(Person.schema.validate.args[0]).be.deep.equal [@stive, true]
 
         it 'should return `false` if has errors', () ->
             expect(new Person().validate()).be.not.ok
@@ -135,6 +134,16 @@ describe '@Model', () ->
             @stive.save();
             expect(SQLDataRequest.prototype.save.called).be.ok
             expect(SQLDataRequest.prototype.save.calledWith(new Collection([@stive]))).be.ok
+
+        it 'should return itself as first argument', (done) ->
+            stive = @stive
+            stive.save()
+                .then (model) ->
+                    expect(model).to.be.equal stive
+                    done()
+                .fail done
+
+            @deferred.resolve()
 
         it 'should return promise', () ->
             expect(@stive.save()).to.be.deep.instanceof @deferred.promise.constructor

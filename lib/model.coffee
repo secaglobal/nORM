@@ -47,10 +47,12 @@ class Model extends IModel
         @self.schema.validate(@, errors);
 
     save: () ->
+        _this = @
         throw err if (err = @validate()) isnt true
-        DataProvider.createRequest(@self).save(new Collection([@]))
+        DataProvider.createRequest(@self).save(new Collection([@])).then () -> _this
 
     delete: () ->
+        _this = @
         @collection.remove(@) if @collection
         DataProvider.createRequest(@self).delete(new Collection([@]))
 
