@@ -1,9 +1,5 @@
 delimiter $$
 
-CREATE DATABASE `norm_test` /*!40100 DEFAULT CHARACTER SET utf8 */$$
-
-delimiter $$
-
 CREATE TABLE `Car` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `title` varchar(45) DEFAULT NULL,

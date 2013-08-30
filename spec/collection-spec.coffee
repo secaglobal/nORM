@@ -12,6 +12,7 @@ describe '@Collection', () ->
     beforeEach () ->
         @collection = new Collection [], {
             model: Person,
+            fields: ['id'],
             order: {id: -1},
             limit: 10,
             offset: 1,
@@ -27,8 +28,10 @@ describe '@Collection', () ->
         sinon.stub(@collection.getRequest(), 'setLimit').returns @collection.getRequest()
         sinon.stub(@collection.getRequest(), 'setOffset').returns @collection.getRequest()
         sinon.stub(@collection.getRequest(), 'setFilters').returns @collection.getRequest()
+        sinon.stub(@collection.getRequest(), 'setFields').returns @collection.getRequest()
         sinon.stub(@collection.getRequest(), 'fillRelation').returns @deferred.promise
-
+        sinon.spy(@collection.getRequest(), 'fillTotalCount')
+        sinon.spy(Person.schema, 'validate')
 
     afterEach () ->
         @collection.getRequest().find.restore()
@@ -36,9 +39,25 @@ describe '@Collection', () ->
         @collection.getRequest().setOffset.restore()
         @collection.getRequest().setOrder.restore()
         @collection.getRequest().setFilters.restore()
+        @collection.getRequest().setFields.restore()
         @collection.getRequest().save.restore()
         @collection.getRequest().delete.restore()
         @collection.getRequest().fillRelation.restore()
+        @collection.getRequest().fillTotalCount.restore()
+        Person.schema.validate.restore();
+
+    describe '#constructor', () ->
+        it 'should recognize which parameters are models and config', () ->
+            col1 = new Collection([{id: 4}], {model: Person})
+            col2 = new Collection({model: Person}, [{id: 5}])
+            col3 = new Collection({model: Person})
+
+            expect(col1.models[0].id).be.equal 4
+            expect(col1.config.model).be.equal Person
+            expect(col2.models[0].id).be.equal 5
+            expect(col2.config.model).be.equal Person
+            expect(col3.models.length).be.equal 0
+            expect(col3.config.model).be.equal Person
 
     describe '#reset', () ->
         it 'should reset models with new list', () ->
@@ -74,10 +93,10 @@ describe '@Collection', () ->
             expect(@collection.load()).to.be.deep.instanceof @deferred.promise.constructor
 
         it 'should fill collection with received models', (done) ->
-            _ = @
+            _this = @
             @collection.load().then ()->
                 try
-                    _.collection.length.should.be.equal 1
+                    _this.collection.length.should.be.equal 1
                     done()
                 catch err
                     done err
@@ -87,10 +106,10 @@ describe '@Collection', () ->
             ])
 
         it 'should pass collection as first argument for resolved promise', (done) ->
-            _ = @
+            _this = @
             @collection.load().then (col)->
                 try
-                    _.collection.should.be.equal col
+                    _this.collection.should.be.equal col
                     done()
                 catch err
                     done err
@@ -98,6 +117,28 @@ describe '@Collection', () ->
             @deferred.resolve([
                 {id: 4}
             ])
+
+        it 'should request all requested relations', (done) ->
+            col = @collection
+            spy = col.getRequest().fillRelation
+
+            col.setFields('name','job', 'tasks.id').load().then ()->
+                try
+                    spy.calledWithExactly(col, 'job', []).should.be.ok
+                    spy.calledWithExactly(col, 'tasks', ['id']).should.be.ok
+                    done()
+                catch err
+                    done err
+
+            @deferred.resolve([
+                {id: 4}
+            ])
+
+        it 'should use required fields', ()->
+            @collection.load()
+            @collection.getRequest().setFields.called.should.be.ok
+            expect(@collection.getRequest().setFields.args[0][0]).be.ok
+            @collection.getRequest().setFields.calledWith(@collection.config.fields).should.be.ok
 
         it 'should use filters', ()->
             @collection.load()
@@ -123,6 +164,41 @@ describe '@Collection', () ->
             expect(@collection.getRequest().setOrder.args[0][0]).be.ok
             @collection.getRequest().setOrder.calledWith(@collection.config.order).should.be.ok
 
+        it 'should call request#fillTotalCount if option `total` is true', () ->
+            @collection.config.total = true
+            @collection.load()
+            @collection.getRequest().fillTotalCount.called.should.be.ok
+
+        it 'should set `total` property if required', (done) ->
+            col = @collection
+            col.config.total = true
+            col.load().then () ->
+                try
+                    expect(col.total).be.equal 10
+                    done()
+                catch e
+                    done e
+            .fail(done)
+
+            res = [{id: 4}]
+            res.total = 10
+            @deferred.resolve res
+
+        it 'should set `total` property if required and total is zero', (done) ->
+            col = @collection
+            col.config.total = true
+            col.load().then () ->
+                try
+                    expect(col.total).be.equal 0
+                    done()
+                catch e
+                    done e
+            .fail(done)
+
+            res = []
+            res.total = 0
+            @deferred.resolve res
+
     describe '#save', () ->
         it 'should pass all models to @DataRequest#save', () ->
             @collection.reset [
@@ -131,10 +207,19 @@ describe '@Collection', () ->
             ]
             @collection.save()
 
-            @collection.getRequest().save.calledWith(@collection.models).should.be.ok
+            @collection.getRequest().save.calledWith(@collection).should.be.ok
 
         it 'should return promise', () ->
             expect(@collection.save()).to.be.deep.instanceof @deferred.promise.constructor
+
+        it 'should throw exception if validation has not been passed', () ->
+            col = @collection.reset [
+                {id: 1, name: 'lego'} ,
+                {}
+            ]
+
+            expect(() -> col.save()).to.throw()
+            @collection.getRequest().save.called.should.be.not.ok
 
     describe '#delete', () ->
         it 'should pass all models to @DataRequest#delete', () ->
@@ -144,13 +229,13 @@ describe '@Collection', () ->
             ]
             @collection.delete()
 
-            @collection.getRequest().delete.calledWith(@collection.models).should.be.ok
+            @collection.getRequest().delete.calledWith(@collection).should.be.ok
 
         it 'should return promise', () ->
             expect(@collection.delete()).to.be.instanceof @deferred.promise.constructor
 
         it 'should reset models array if success', (done) ->
-            _ = @
+            _this = @
             @collection.reset [
                 {id: 1, name: 'lego'} ,
                 {name: 'mike'}
@@ -158,7 +243,7 @@ describe '@Collection', () ->
 
             @collection.delete().then(() ->
                 try
-                    _.collection.models.should.be.deep.equal []
+                    _this.collection.models.should.be.deep.equal []
                     done()
                 catch err
                     done err
@@ -167,7 +252,7 @@ describe '@Collection', () ->
             @deferred.resolve(123)
 
         it 'should keep models array if false', (done) ->
-            _ = @
+            _this = @
             @collection.reset [
                 {id: 1, name: 'lego'} ,
                 {name: 'mike'}
@@ -176,7 +261,7 @@ describe '@Collection', () ->
 
             @collection.delete().then null, (err) ->
                 try
-                    _.collection.models.should.be.deep.equal models
+                    _this.collection.models.should.be.deep.equal models
                     done()
                 catch err
                     done err
@@ -187,9 +272,71 @@ describe '@Collection', () ->
         it 'should load relations via data-request', () ->
             @collection.require('job', 'tasks')
             expect(@collection.getRequest().fillRelation.called).to.be.ok
-            expect(@collection.getRequest().fillRelation.calledWith @collection.models, 'job').to.be.ok
-            expect(@collection.getRequest().fillRelation.calledWith @collection.models, 'tasks').to.be.ok
+            expect(@collection.getRequest().fillRelation.calledWith @collection, 'job', []).to.be.ok
+            expect(@collection.getRequest().fillRelation.calledWith @collection, 'tasks', []).to.be.ok
 
         it 'should returns promise', () ->
             expect(@collection.require('job', 'tasks')).to.be.instanceof  @deferred.promise.constructor
+
+        it 'should pass collection as first parameter of promise', (done) ->
+            col = @collection
+            col.require('job', 'tasks').then (res) ->
+                expect(res).be.equal col
+                done()
+            .fail(done)
+
+            @deferred.resolve()
+
+    describe '#toJSON', () ->
+        it 'should return models', () ->
+            @collection.reset [
+                {id: 1, name: 'lego'} ,
+                {name: 'mike'}
+            ]
+
+            expect(@collection.toJSON()).to.be.equal @collection.models
+
+    describe  '#setFields', () ->
+        it 'should be able to receive list of fields as array', () ->
+            @collection.setFields ['id', 'name']
+            expect(@collection.config.fields).be.deep.equal ['id', 'name']
+
+        it 'should be able to receive list of fields as arguents', () ->
+            @collection.setFields 'id', 'name'
+            expect(@collection.config.fields).be.deep.equal ['id', 'name']
+
+        it 'should separate model fields and relations fields', () ->
+            @collection.setFields 'id', 'name', 'job', 'tasks.title'
+            expect(@collection.config.fields).be.deep.equal ['id', 'name']
+            expect(@collection.config.relations).be.deep.equal
+                job : [],
+                tasks : ['title']
+
+    describe '#validete', () ->
+        it 'should validate models', () ->
+            @collection.reset([{name: 'Phil'}, {name: 'Rex'}]).validate()
+            expect(Person.schema.validate.called).be.ok;
+            expect(Person.schema.validate.args.length).be.equal @collection.length
+            expect(Person.schema.validate.args[1]).be.deep.equal [@collection.at(1), null];
+
+        it 'should return `false` if no errors', () ->
+            expect(@collection.reset([{name: 'Phil'}, {}]).validate()).be.not.ok
+
+        it 'should fill errors if available', () ->
+            @collection.reset([{name: 'Phil'}, {}]).validate(errors = {})
+
+            expect(errors[1][0].field).be.equal 'name'
+            expect(errors[1][0].error.code).be.equal "VALIDATOR__ERROR__REQUIRE"
+
+        it 'should return `true` if no errors', () ->
+            expect(@collection.reset([{name: 'Phil'}, {name: 'Rex'}]).validate()).be.equal true
+
+    describe '#remove', () ->
+        it 'should remove model from collection', () ->
+            @collection.reset([{name: 'Phil'}, {name: 'Rex'}])
+            @collection.remove(@collection.findWhere(name: 'Phil'))
+            expect(@collection.length).be.equal 1
+            expect(@collection.first().name).be.equal 'Rex'
+
+
 

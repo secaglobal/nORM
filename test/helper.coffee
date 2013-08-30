@@ -15,8 +15,8 @@ global.sinon = require 'sinon'
 dataProvider.registerProxy("default", new MysqlProxy(
     host      : 'localhost',
     user      : 'test',
-    password  : 'testpass',
-    database  : 'norm_test',
+    password  : '',
+    database  : 'test_norm',
     charset   : 'utf8',
 #    debug     : ['ComQueryPacket']
 #    debug     : ['ComQueryPacket', 'RowDataPacket']
@@ -49,13 +49,12 @@ global.loadFixtures = (data) ->
 
             promises.push proxy.perform(query)
 
-    Q.allResolved(promises).then (promises)->
-        for promise in promises
-            if not promise.isFulfilled()
-                deferred.reject promise.valueOf().exception
-                return
-
+    Q.allSettled(promises).then (results) ->
+        results.forEach (result) ->
+            if result.state isnt "fulfilled"
+                deferred.reject result.reason
         deferred.resolve()
+
     return deferred.promise
 
 

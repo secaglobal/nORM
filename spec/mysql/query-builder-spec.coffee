@@ -83,6 +83,16 @@ describe '@Mysql.QueryBuilder', () ->
         it 'should set order clouse', () ->
             @builder.setOrder({id: 1, name: -1}).compose().should.equal "select * from `Test` order by `id`,`name` desc"
 
+    describe '#setFields', () ->
+        it 'should be able to receive list of fields as array', () ->
+            expect(@builder.setFields(['id', 'name'])._fields).be.deep.equal ['id', 'name']
+
+        it 'should be able to receive list of fields as arguents', () ->
+            expect(@builder.setFields('id', 'name')._fields).be.deep.equal ['id', 'name']
+
+        it 'should set fields', () ->
+            @builder.setFields('id', 'name').compose().should.equal "select `id`,`name` from `Test`"
+
     describe '#compose', () ->
         it 'should compose select queries', () ->
             @builder.compose().should.equal 'select * from `Test`'
@@ -119,4 +129,21 @@ describe '@Mysql.QueryBuilder', () ->
             @builder.compose()
                 .should.equal "insert into `Test`(`state`,`status`) values('1','2'),('2','3'),('3','4')"
 
+    describe '#addMeta', () ->
+        it 'should insert different meta tegs', () ->
+            expect(@builder
+                .addMeta(Builder.META__TOTAL_COUNT, Builder.META__NO_CACHE)
+                .compose()
+            ).equal 'select SQL_CALC_FOUND_ROWS SQL_NO_CACHE * from `Test`'
+
+    describe '#hasMeta', () ->
+        it 'should return true if meta was set', () ->
+            @builder.addMeta Builder.META__TOTAL_COUNT, Builder.META__NO_CACHE
+            expect(@builder.hasMeta(Builder.META__TOTAL_COUNT)).be.ok
+            expect(@builder.hasMeta(Builder.META__NO_CACHE)).be.ok
+
+        it 'should return false if meta was not set', () ->
+            @builder.addMeta Builder.META__NO_CACHE
+            expect(@builder.hasMeta(Builder.META__TOTAL_COUNT)).be.not.ok
+            expect(@builder.hasMeta(Builder.META__NO_CACHE)).be.ok
 

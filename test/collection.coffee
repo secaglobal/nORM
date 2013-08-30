@@ -10,9 +10,32 @@ describe '@Collection', () ->
     beforeEach (done) ->
         loadFixtures({
             Person: [
-                {id: 1, name: 'Mike'},
-                {id: 7, name: 'Denis'},
-                {id: 8, name: 'Marge'},
+                {id: 1, name: 'Mike', age: 10, jobId: 1},
+                {id: 2, name: 'Denis', age: 20, jobId: 2},
+                {id: 3, name: 'Marge', age: 30, jobId: 3},
+            ],
+            Job: [
+                {id: 1, title: 'Sales', salary: 100},
+                {id: 2, title: 'Admin', salary: 200},
+                {id: 3, title: 'Programmer', salary: 300},
+            ],
+            Task: [
+                {id: 1, title: 'Draw template'},
+                {id: 2, title: 'Conferences'},
+                {id: 3, title: 'Prepare code'},
+            ],
+            Person__Task: [
+                {id: 1, personId: 1, taskId: 1},
+                {id: 2, personId: 1, taskId: 2},
+                {id: 3, personId: 2, taskId: 1},
+                {id: 4, personId: 3, taskId: 1},
+                {id: 5, personId: 3, taskId: 3},
+            ],
+            Car: [
+                {id: 1, title: 'BMW', personId: 1},
+                {id: 2, title: 'Nissan', personId: 2},
+                {id: 3, title: 'Toyota', personId: 3},
+                {id: 4, title: 'Audi', personId: 2},
             ]
         }).then(() -> done()).fail(done)
 
@@ -77,7 +100,7 @@ describe '@Collection', () ->
                     try
                         col.length.should.be.equal 1
                         expect(col.first().name).be.equal 'Marge'
-                        expect(col.first().id).be.equal 8
+                        expect(col.first().id).be.equal 3
                         done()
                     catch e
                         done e
@@ -107,10 +130,31 @@ describe '@Collection', () ->
             new Collection([], {model: Person, order: {id: -1}}).load()
                 .then (col) ->
                     try
-                        col.first().id.should.be.equal 8
+                        col.first().id.should.be.equal 3
                         done()
                     catch e
                         done e
+                .fail(done)
+
+        it 'should set total count if required', (done) ->
+            new Collection([], {model: Person, total: true, limit: 1}).load()
+                .then (col) ->
+                    try
+                        col.length.should.be.equal 1
+                        col.total.should.be.equal 3
+                        done()
+                    catch e
+                        done e
+                .fail(done)
+
+        it 'should load relations', (done) ->
+            new Collection([], {model: Person, fields: ['cars.id','cars.title','tasks.id']}).load()
+                .then (col) ->
+                    model = col.findWhere(name: 'Denis')
+                    expect(model).be.ok
+                    expect(model.cars).be.ok
+                    expect(model.tasks).be.ok
+                    done()
                 .fail(done)
 
 

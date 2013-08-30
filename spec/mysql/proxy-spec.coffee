@@ -1,4 +1,5 @@
 DataRequest = require("#{LIBS_PATH}/mysql/data-request");
+MySQLQueryBuilder = require("#{LIBS_PATH}/mysql/query-builder");
 Proxy = require("#{LIBS_PATH}/mysql/proxy");
 Model = require("#{LIBS_PATH}/model");
 Q = require 'q'
@@ -23,6 +24,12 @@ describe '@Mysql.Proxy', () ->
             @proxy.perform query
             @readQueryStub.calledWith(query).should.be.ok
 
+        it 'should execute mysql query builders', () ->
+            builder = new MySQLQueryBuilder().setTable('Test').setFilters({id: 1})
+
+            @proxy.perform builder
+            @readQueryStub.calledWith(builder.compose()).should.be.ok
+
         it 'should use read connection for select queries', () ->
             query = 'select * from Test where id = 1'
             @proxy.perform query
@@ -40,6 +47,41 @@ describe '@Mysql.Proxy', () ->
         it 'should returns promise for interaction with result', () ->
             query = 'select * from Test where id = 1'
             expect(@proxy.perform(query)).to.be.instanceof Q.defer().promise.constructor
+
+        it 'should request FOUND_ROWS request if META__TOTAL_COUNT flag available', (done) ->
+            spy = @readQueryStub
+            builder = new MySQLQueryBuilder().setTable('Test')
+                .addMeta(MySQLQueryBuilder.META__TOTAL_COUNT)
+                .setFilters({id: 1})
+
+            @proxy.perform(builder).then () ->
+                try
+                    spy.calledWith('select FOUND_ROWS() total').should.be.ok
+                    done()
+                catch e
+                    done e
+            .fail(done)
+
+            spy.args[0][1](null, [{name: 'Charly'}])
+            spy.args[1][1](null, [{total: 4}])
+
+        it 'should set rows.totalCount if TOTAL_COUNT meta flag available', (done) ->
+            spy = @readQueryStub
+            builder = new MySQLQueryBuilder().setTable('Test')
+                .addMeta(MySQLQueryBuilder.META__TOTAL_COUNT)
+                .setFilters({id: 1})
+
+            @proxy.perform(builder).then (rows) ->
+                try
+                    expect(rows.total).be.equal 4
+                    done()
+                catch e
+                    done e
+            .fail(done)
+
+            spy.args[0][1](null, [{name: 'Charly'}])
+            spy.args[1][1](null, [{total: 4}])
+
 
     describe '#getReadConnection', () ->
         it 'should return read connection to mysql', () ->

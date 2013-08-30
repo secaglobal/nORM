@@ -11,6 +11,8 @@ class DataProvider
         @proxies[alias]
 
     createRequest: (model) ->
-        @getProxy(model).createDataRequest model
+        proxy = @getProxy(model)
+        return proxy.createDataRequest model if proxy
+        throw "Proxy not found"
 
 module.exports = new DataProvider;

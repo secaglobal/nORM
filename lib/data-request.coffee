@@ -1,10 +1,21 @@
 Q = require 'q'
+_ = require 'underscore'
 
 class DataRequest
     constructor: (@_proxy) ->
+        @_fields = []
+        @_filters = []
+        @_order = []
+        @_limit = 0
+        @_offset = 0
+        @
 
     getProxy: () ->
         @_proxy
+
+    setFields: (fields) ->
+        @_fields = if _.isArray(fields) then fields else _.toArray(arguments)
+        @
 
     setFilters: (@_filters) ->
         @
@@ -42,20 +53,20 @@ class DataRequest
     fillVirtualOneToManyRelation: (models, relation) ->
         throw 'Absract method'
 
-    fillRelation: (models, relation) ->
+    fillRelation: (models, relation, fields) ->
         if not models.length
             deferred = Q.defer()
             deferred.resolve()
             return deferred.promise
 
-        config = models[0].schema.fields[relation]
+        config = models.config.model.schema.fields[relation]
 
         if config.m2m
-            return @fillManyToManyRelation models, relation
+            return @fillManyToManyRelation models, relation, fields
         else if config.collection
-            return @fillOneToManyRelation models, relation
+            return @fillOneToManyRelation models, relation, fields
         else
-            return @fillManyToOneRelation models, relation
+            return @fillManyToOneRelation models, relation, fields
 
 
 module.exports = DataRequest;

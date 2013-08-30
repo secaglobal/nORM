@@ -3,6 +3,7 @@ _ = require 'underscore'
 Util = require './util'
 IModel = require("./imodel");
 Collection = require("./collection");
+DataProvider = require './data-provider'
 
 class Model extends IModel
     constructor: (attributes) ->
@@ -20,9 +21,17 @@ class Model extends IModel
             @original[attr] = value
 
     require: () ->
-        me = @
+        _this = @
         collection = @collection or new Collection([@], {model: @self})
-        collection.require.apply(collection, arguments).then(() -> return me)
+        collection.require.apply(collection, arguments).then(() -> return _this)
+
+    toJSON: () ->
+        res = {}
+        for field of @self.schema.fields
+            value = @[field]
+            if value?
+                res[field] = value
+        return res
 
     hasChanges: () ->
         !_.isEmpty @getChangedAttributes()
@@ -30,9 +39,22 @@ class Model extends IModel
     getChangedAttributes: () ->
         changes = {}
         fields = @self.schema.fields
-        for field, params of fields
+        for field of fields
             changes[field] = @[field] if @original[field] != @[field]
         return if _.isEmpty(changes) then false else changes
+
+    validate: (errors = null) ->
+        @self.schema.validate(@, errors);
+
+    save: () ->
+        _this = @
+        throw err if (err = @validate()) isnt true
+        DataProvider.createRequest(@self).save(new Collection([@])).then () -> _this
+
+    delete: () ->
+        _this = @
+        @collection.remove(@) if @collection
+        DataProvider.createRequest(@self).delete(new Collection([@]))
 
     @getProxyAlias: () ->
         return @schema.proxy
