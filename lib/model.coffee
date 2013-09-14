@@ -3,7 +3,6 @@ _ = require 'underscore'
 Util = require './util'
 IModel = require("./imodel");
 Collection = require("./collection");
-DataProvider = require './data-provider'
 
 class Model extends IModel
     constructor: (attributes) ->
@@ -46,36 +45,13 @@ class Model extends IModel
     validate: (errors = null, recurcive = false) ->
         @self.schema.validate(@, errors, recurcive);
 
-    save: () ->
+    save: (recursive = false) ->
         _this = @
-        throw err if (err = @validate()) isnt true
-        DataProvider.createRequest(@self).save(new Collection([@])).then () -> _this
-
-#    deepSave: (errors = null, ignoreValidation = false) ->
-#        _this = @
-#        deferred = Q.defer()
-#        promises = []
-#
-#        if not ignoreValidation and not @validate(errors, true)
-#            deferred.reject errors
-#            return deferred.promise
-#
-#        promises.push @save()
-#
-#        for relation in @self.schema.relations
-#            promises.push @[relation].deepSave(null, false) if @[relation]?
-#
-#        Q.allSettled(promises).then (results) ->
-#            results.forEach (result) ->
-#                if result.state isnt "fulfilled"
-#                    deferred.reject result.reason
-#
-#            deferred.resolve(_this)
-#        deferred.promise
+        new Collection([@]).save(recursive).then () -> _this
 
     delete: () ->
         @collection.remove(@) if @collection
-        DataProvider.createRequest(@self).delete(new Collection([@]))
+        new Collection([@]).delete()
 
     @getProxyAlias: () ->
         return @schema.proxy

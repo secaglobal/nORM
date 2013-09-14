@@ -15,16 +15,16 @@ describe '@Model', () ->
         @deferred = Q.defer()
 
         sinon.stub(Collection.prototype, 'require').returns @deferred.promise
-        sinon.stub(SQLDataRequest.prototype, 'save').returns @deferred.promise
-        sinon.stub(SQLDataRequest.prototype, 'delete').returns @deferred.promise
+        sinon.stub(Collection.prototype, 'save').returns @deferred.promise
+        sinon.stub(Collection.prototype, 'delete').returns @deferred.promise
         sinon.spy(Person.schema, 'validate')
         #sinon.spy(Model.prototype, 'deepSave')
         #sinon.spy(Collection.prototype, 'deepSave')
 
     afterEach () ->
         Collection.prototype.require.restore()
-        SQLDataRequest.prototype.save.restore()
-        SQLDataRequest.prototype.delete.restore()
+        Collection.prototype.save.restore()
+        Collection.prototype.delete.restore()
         Person.schema.validate.restore();
         #Model.prototype.deepSave.restore()
         #Collection.prototype.deepSave.restore()
@@ -141,10 +141,14 @@ describe '@Model', () ->
             expect(errors[0].field).be.equal 'cars'
 
     describe '#save', () ->
-        it 'should use datarequest for saving', () ->
+        it 'should use collection for saving', () ->
+            spy = Collection.prototype.save
+
             @stive.save();
-            expect(SQLDataRequest.prototype.save.called).be.ok
-            expect(SQLDataRequest.prototype.save.calledWith(new Collection([@stive]))).be.ok
+
+            expect(spy.called).be.ok
+            expect(spy.lastCall.thisValue.models).be.deep.equal [@stive]
+            expect(spy.calledWith(false)).be.ok
 
         it 'should return itself as first argument', (done) ->
             stive = @stive
@@ -159,11 +163,10 @@ describe '@Model', () ->
         it 'should return promise', () ->
             expect(@stive.save()).to.be.deep.instanceof @deferred.promise.constructor
 
-        it 'should throw exception if validation has not been passed', () ->
+        it 'should be possible to save recursively', () ->
             stive = new Person({});
-
-            expect(() -> stive.save()).to.throw()
-            expect(SQLDataRequest.prototype.save.called).be.not.ok
+            stive.save(true)
+            expect(Collection.prototype.save.calledWith(true)).be.ok;
 
 #    describe '#deepSave', () ->
 #        beforeEach () ->
@@ -210,9 +213,13 @@ describe '@Model', () ->
 
     describe '#delete', () ->
         it 'should use datarequest for delition', () ->
+            spy = Collection.prototype.delete
+
             @stive.delete();
-            expect(SQLDataRequest.prototype.delete.called).be.ok
-            expect(SQLDataRequest.prototype.delete.calledWith(new Collection([@stive]))).be.ok
+
+            expect(spy.called).be.ok
+            expect(spy.lastCall.thisValue.models).be.deep.equal [@stive]
+            expect(spy.calledWith()).be.ok
 
         it 'should return promise', () ->
             expect(@stive.delete()).to.be.deep.instanceof @deferred.promise.constructor
