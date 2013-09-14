@@ -1,24 +1,24 @@
 {
-    "name": "norman",
-    "description": "Node.js ORM",
-    "version": "0.2.0",
-    "author": {
-        "name": "Sergey Levandovskiy",
-        "email": "levandovskiy.s@gmail.com"
-    },
-    "main": "./index.js",
-    "directories": {
-        "lib": "./lib/"
-    },
-    "dependencies": {
-        "coffee-script": "*",
-        "mysql": "*",
-        "q": "*",
-        "underscore": "*"
-    },
-    "devDependencies": {
-        "sinon": "*",
-        "mocha": "*",
-        "chai": "*"
-    }
+  "name": "norman",
+  "description": "Node.js ORM",
+  "version": "0.2.1",
+  "author": {
+    "name": "Sergey Levandovskiy",
+    "email": "levandovskiy.s@gmail.com"
+  },
+  "main": "./index.js",
+  "directories": {
+    "lib": "./lib/"
+  },
+  "dependencies": {
+    "coffee-script": "*",
+    "mysql": "*",
+    "q": "*",
+    "underscore": "*"
+  },
+  "devDependencies": {
+    "sinon": "*",
+    "mocha": "*",
+    "chai": "*"
+  }
 }
