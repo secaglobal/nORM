@@ -4,7 +4,7 @@ Schema = require("#{LIBS_PATH}/schema");
 class Job extends Model
     @schema: new Schema 'Job',
         id: Number
-        title: String,
+        title: {type: String, require: true},
         salary: Number
 
 class Task extends Model
@@ -15,7 +15,7 @@ class Task extends Model
 class Car  extends Model
     @schema: new Schema 'Car',
         id: Number
-        title: String,
+        title: {type: String, require: true},
         personId: Number
 
 class Person extends Model

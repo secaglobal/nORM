@@ -18,12 +18,16 @@ describe '@Model', () ->
         sinon.stub(SQLDataRequest.prototype, 'save').returns @deferred.promise
         sinon.stub(SQLDataRequest.prototype, 'delete').returns @deferred.promise
         sinon.spy(Person.schema, 'validate')
+        #sinon.spy(Model.prototype, 'deepSave')
+        #sinon.spy(Collection.prototype, 'deepSave')
 
     afterEach () ->
         Collection.prototype.require.restore()
         SQLDataRequest.prototype.save.restore()
         SQLDataRequest.prototype.delete.restore()
         Person.schema.validate.restore();
+        #Model.prototype.deepSave.restore()
+        #Collection.prototype.deepSave.restore()
 
     describe '#constructor', () ->
         it 'should provide access to first level fields', () ->
@@ -108,12 +112,12 @@ describe '@Model', () ->
         it 'should validate model', () ->
             @stive.validate()
             expect(Person.schema.validate.called).be.ok
-            expect(Person.schema.validate.args[0]).be.deep.equal [@stive, null]
+            expect(Person.schema.validate.args[0]).be.deep.equal [@stive, null, false]
 
         it 'should transmit parameter for recursive validation', () ->
             @stive.validate(true)
             expect(Person.schema.validate.called).be.ok
-            expect(Person.schema.validate.args[0]).be.deep.equal [@stive, true]
+            expect(Person.schema.validate.args[0]).be.deep.equal [@stive, true, false]
 
         it 'should return `false` if has errors', () ->
             expect(new Person().validate()).be.not.ok
@@ -128,6 +132,13 @@ describe '@Model', () ->
 
         it 'should return `true` if no errors', () ->
             expect(@stive.validate()).be.ok
+
+        it 'should be possible to recursively validate', () ->
+            person = new Person name: 'Rex', cars: [{id: 4}]
+
+            expect(person.validate(errors = [], true)).be.equal false
+            expect(errors.length).be.equal 1
+            expect(errors[0].field).be.equal 'cars'
 
     describe '#save', () ->
         it 'should use datarequest for saving', () ->
@@ -153,6 +164,49 @@ describe '@Model', () ->
 
             expect(() -> stive.save()).to.throw()
             expect(SQLDataRequest.prototype.save.called).be.not.ok
+
+#    describe '#deepSave', () ->
+#        beforeEach () ->
+#
+#            @_person = new Person
+#                name: 'Rex',
+#                job:
+#                    id: 2,
+#                    title: 'developer',
+#                cars: [{id: 4, title: 'BMW'}]
+#
+#        it 'should use datarequest for saving', () ->
+#            @_person.deepSave();
+#            expect(SQLDataRequest.prototype.save.called).be.ok
+#            expect(SQLDataRequest.prototype.save.calledWith(new Collection([@_person]))).be.ok
+#
+#        it 'should save recursively', () ->
+#            @_person.deepSave()
+#            expect(@_person.job.deepSave.calledWith null, false).be.ok
+#            expect(@_person.cars.deepSave.calledWith null, false).be.ok
+#
+#        it 'should return itself as first argument', (done) ->
+#            stive = @_person
+#            stive.deepSave()
+#                .then (model) ->
+#                    expect(model).to.be.equal stive
+#                    done()
+#                .fail done
+#
+#            @deferred.resolve()
+#
+#        it 'should return promise', () ->
+#            expect(@_person.deepSave()).to.be.deep.instanceof @deferred.promise.constructor
+#
+#        it 'should fail if validation has not been passed', (done) ->
+#            stive = new Person name: 'Rex', job: {id: 2}, cars: [{id: 4}]
+#
+#            stive.deepSave()
+#                .then (model) ->
+#                    done('Expect to fail')
+#                .fail (errors) ->
+#                    expect(errors).isArray
+#                    done()
 
     describe '#delete', () ->
         it 'should use datarequest for delition', () ->

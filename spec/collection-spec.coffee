@@ -2,6 +2,8 @@ MysqlProxy = require("#{LIBS_PATH}/mysql/proxy");
 Collection = require("#{LIBS_PATH}/collection");
 Q = require 'q'
 Person = require('./models')['Person']
+Car = require('./models')['Car']
+Job = require('./models')['Job']
 
 dataProvider = require("#{LIBS_PATH}/data-provider")
 
@@ -200,6 +202,17 @@ describe '@Collection', () ->
             @deferred.resolve res
 
     describe '#save', () ->
+        beforeEach () ->
+            @collection.reset [
+                {id: 1, name: 'lego', job: {title: 'dev'}, cars: [{title: 'BMW'}]},
+                {id: 2, name: 'mike', cars: [{title: 'BMW'}], tasks: [{title: 'clean'}]}
+            ]
+
+            sinon.stub(@collection.at(0).job, 'save').returns @deferred
+            sinon.stub(@collection.at(0).cars, 'save').returns @deferred
+            sinon.stub(@collection.at(1).cars, 'save').returns @deferred
+            sinon.stub(@collection.at(1).tasks, 'save').returns @deferred
+
         it 'should pass all models to @DataRequest#save', () ->
             @collection.reset [
                 {id: 1, name: 'lego'} ,
@@ -212,14 +225,71 @@ describe '@Collection', () ->
         it 'should return promise', () ->
             expect(@collection.save()).to.be.deep.instanceof @deferred.promise.constructor
 
-        it 'should throw exception if validation has not been passed', () ->
+        it 'should fail if validation has not been passed', (done) ->
             col = @collection.reset [
                 {id: 1, name: 'lego'} ,
                 {}
             ]
 
-            expect(() -> col.save()).to.throw()
-            @collection.getRequest().save.called.should.be.not.ok
+            col.save()
+                .then () ->
+                    done('Should fail')
+                .fail (errors) ->
+                    expect(errors).isArray
+                    done()
+
+
+        describe '[recurcive=true]', () ->
+            it 'should traverse all models dependant relations and save them', (done) ->
+                col = @collection
+                col.save(true)
+                    .then () ->
+                        expect(col.at(0).cars.save.calledWith(true)).be.ok
+                        expect(col.at(1).cars.save.calledWith(true)).be.ok
+                        done()
+                    .fail done
+                @deferred.resolve()
+
+            it 'should ignore independant relations', (done) ->
+                col = @collection
+                col.save(true)
+                    .then () ->
+                        expect(col.at(0).job.save.called).be.not.ok
+                        expect(col.at(1).tasks.save.called).be.not.ok
+                        done()
+                    .fail done
+                @deferred.resolve()
+
+            it 'should assign model id for relation', (done) ->
+                col = @collection
+                col.save(true)
+                    .then () ->
+                        expect(col.at(0).cars.at(0).personId).be.equal 1
+                        expect(col.at(1).cars.at(0).personId).be.equal 2
+                        done()
+                    .fail done
+                @deferred.resolve()
+#    describe '#_saveAffectingRelations', () ->
+#        it 'should pass all models to @DataRequest#save', () ->
+#            @collection.reset [
+#                {id: 1, name: 'lego', job: {title: 'dev'}, job:} ,
+#                {name: 'mike'}
+#            ]
+#            @collection.save()
+#
+#            @collection.getRequest().save.calledWith(@collection).should.be.ok
+#
+#        it 'should return promise', () ->
+#            expect(@collection.save()).to.be.deep.instanceof @deferred.promise.constructor
+#
+#        it 'should throw exception if validation has not been passed', () ->
+#            col = @collection.reset [
+#                {id: 1, name: 'lego'} ,
+#                {}
+#            ]
+#
+#            expect(() -> col.save()).to.throw()
+#            @collection.getRequest().save.called.should.be.not.ok
 
     describe '#delete', () ->
         it 'should pass all models to @DataRequest#delete', () ->
@@ -317,19 +387,30 @@ describe '@Collection', () ->
             @collection.reset([{name: 'Phil'}, {name: 'Rex'}]).validate()
             expect(Person.schema.validate.called).be.ok;
             expect(Person.schema.validate.args.length).be.equal @collection.length
-            expect(Person.schema.validate.args[1]).be.deep.equal [@collection.at(1), null];
+            expect(Person.schema.validate.args[1]).be.deep.equal [@collection.at(1), null, false];
 
         it 'should return `false` if no errors', () ->
             expect(@collection.reset([{name: 'Phil'}, {}]).validate()).be.not.ok
 
         it 'should fill errors if available', () ->
-            @collection.reset([{name: 'Phil'}, {}]).validate(errors = {})
+            @collection.reset([{name: 'Phil'}, {}]).validate(errors = [])
 
-            expect(errors[1][0].field).be.equal 'name'
-            expect(errors[1][0].error.code).be.equal "VALIDATOR__ERROR__REQUIRE"
+            expect(errors[0][0].field).be.equal 'name'
+            expect(errors[0][0].error.code).be.equal "VALIDATOR__ERROR__REQUIRE"
 
         it 'should return `true` if no errors', () ->
             expect(@collection.reset([{name: 'Phil'}, {name: 'Rex'}]).validate()).be.equal true
+
+        it 'should be possible to recursively validate', () ->
+            col = @collection.reset([
+                {name: 'Phil'},
+                {name: 'Rex', cars: [{id: 4}]}
+            ])
+
+            expect(col.validate(errors = [], true)).be.equal false
+            expect(errors.length).be.equal 1
+            expect(errors[0].length).be.equal 1
+            expect(errors[0][0].field).be.equal 'cars'
 
     describe '#remove', () ->
         it 'should remove model from collection', () ->

@@ -43,16 +43,37 @@ class Model extends IModel
             changes[field] = @[field] if @original[field] != @[field]
         return if _.isEmpty(changes) then false else changes
 
-    validate: (errors = null) ->
-        @self.schema.validate(@, errors);
+    validate: (errors = null, recurcive = false) ->
+        @self.schema.validate(@, errors, recurcive);
 
     save: () ->
         _this = @
         throw err if (err = @validate()) isnt true
         DataProvider.createRequest(@self).save(new Collection([@])).then () -> _this
 
+#    deepSave: (errors = null, ignoreValidation = false) ->
+#        _this = @
+#        deferred = Q.defer()
+#        promises = []
+#
+#        if not ignoreValidation and not @validate(errors, true)
+#            deferred.reject errors
+#            return deferred.promise
+#
+#        promises.push @save()
+#
+#        for relation in @self.schema.relations
+#            promises.push @[relation].deepSave(null, false) if @[relation]?
+#
+#        Q.allSettled(promises).then (results) ->
+#            results.forEach (result) ->
+#                if result.state isnt "fulfilled"
+#                    deferred.reject result.reason
+#
+#            deferred.resolve(_this)
+#        deferred.promise
+
     delete: () ->
-        _this = @
         @collection.remove(@) if @collection
         DataProvider.createRequest(@self).delete(new Collection([@]))
 

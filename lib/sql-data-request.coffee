@@ -44,7 +44,6 @@ class SQLDataRequest extends DBDataRequest
                     deferred.reject result.reason
 
             deferred.resolve()
-
         deferred.promise
 
 

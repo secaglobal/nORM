@@ -95,6 +95,9 @@ class Collection extends Entity
     forEach: (fn) ->
         _.forEach(@models, fn)
 
+    each: (fn) ->
+        _.each(@models, fn)
+
     isEmpty: () ->
         _.isEmpty(@models)
 
@@ -149,26 +152,43 @@ class Collection extends Entity
 
         deferred.promise
 
-    validate: (errors = null) ->
+    validate: (errors = null, recurcive = false) ->
         noErrors = true
 
-        for model, i in @models
-            modelErrors = [] if errors
-
-            if not model.validate(modelErrors)
-                errors[i] = modelErrors if errors
+        for model in @models
+            if not model.validate(errors and modelErrors = [], recurcive)
+                errors.push modelErrors if errors
                 noErrors = false
 
         return noErrors
 
-    save: () ->
-        throw err if (err = @validate()) isnt true
-        @_request.save(@)
+    save: (recursive = false) ->
+        _this = @
+        return @_sendRejectedPromise(errors) if not @validate(errors = [], recursive)
+        @_request.save(@).then () ->
+            _this._saveRelations() if recursive
+
+    _saveRelations: () ->
+        relations = @config.model.schema.dependentRelations
+        fieldName = @config.model.schema.defaultFieldName
+
+        for model in @models
+            id = model.id
+            for relation in relations
+                col = model[relation]
+
+                if col?
+                    col.each (i) ->i[fieldName] = id
+                    col.save(true)
 
     delete: () ->
         _this = @
         @_request.delete(@).then ()->
             _this.reset([])
 
+    _sendRejectedPromise: (errors) ->
+        deferred = Q.defer()
+        deferred.reject(errors)
+        return deferred.promise
 module.exports = Collection
 
