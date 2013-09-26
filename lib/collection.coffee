@@ -134,6 +134,7 @@ class Collection extends Entity
         @_request.find(@config.model).then (rows)->
             _this.total = rows.total if rows.total?
             _this.reset rows
+            _this.setModelsSyncedWithDB()
             _this._fillRelations()
 
     _fillRelations: () ->
@@ -166,6 +167,7 @@ class Collection extends Entity
         _this = @
         return @_sendRejectedPromise(errors) if not @validate(errors = [], recursive)
         @_request.save(@).then () ->
+            _this.setModelsSyncedWithDB()
             _this._saveRelations() if recursive
 
     _saveRelations: () ->
@@ -185,6 +187,9 @@ class Collection extends Entity
         _this = @
         @_request.delete(@).then ()->
             _this.reset([])
+
+    setModelsSyncedWithDB: (state = true) ->
+        @each (m) -> m.setSyncedWithDB(state)
 
     _sendRejectedPromise: (errors) ->
         deferred = Q.defer()

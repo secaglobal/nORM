@@ -9,6 +9,7 @@ class Model extends IModel
         super()
         @schema = @self.schema
         @original = {}
+        @_isSyncedWithDB = false
 
         for attr, value of attributes
             if _.isArray value
@@ -32,14 +33,17 @@ class Model extends IModel
                 res[field] = value
         return res
 
-    hasChanges: () ->
+    hasChanges: (sync = false) ->
         !_.isEmpty @getChangedAttributes()
 
-    getChangedAttributes: () ->
+    getChangedAttributes: (sync = false) ->
         changes = {}
-        fields = @self.schema.fields
-        for field of fields
-            changes[field] = @[field] if @original[field] != @[field]
+        fields = @self.schema.keys
+        for field in fields
+            if not sync or @.isSyncedWithDB()
+                changes[field] = @[field] if @original[field] != @[field]
+            else
+                changes[field] = @[field] if typeof @[field] isnt 'undefined'
         return if _.isEmpty(changes) then false else changes
 
     validate: (errors = null, recurcive = false) ->
@@ -52,6 +56,12 @@ class Model extends IModel
     delete: () ->
         @collection.remove(@) if @collection
         new Collection([@]).delete()
+
+    setSyncedWithDB: (state = true) ->
+        @_isSyncedWithDB = state
+
+    isSyncedWithDB: () ->
+        @_isSyncedWithDB
 
     @getProxyAlias: () ->
         return @schema.proxy

@@ -85,6 +85,26 @@ describe '@Model', () ->
             expect(person.getChangedAttributes()).is.not.ok
             expect(person.job.getChangedAttributes()).is.deep.equal {title: 'other title'}
 
+        describe '[sync=true]', () ->
+            it 'should return false if no attributes', () ->
+                person = new Person({})
+                expect(person.getChangedAttributes(true)).is.not.ok
+
+            it 'should return false if nothing was changed and object is synced with db', () ->
+                person = new Person({id: 4, name: 'name'});
+                person.setSyncedWithDB()
+                expect(person.getChangedAttributes(true)).is.not.ok
+
+            it 'should return all fields if nothing was changed and object is not synced with db', () ->
+                person = new Person({id: 4, name: 'name'});
+                expect(person.getChangedAttributes(true)).be.deep.equal {id: 4, name: 'name'}
+
+            it 'should return changed values if object is synced with db', () ->
+                person = new Person({id: 4, name: 'name', age: 12});
+                person.setSyncedWithDB()
+                person.name = 'other name'
+                person.age = 14
+                expect(person.getChangedAttributes(true)).is.deep.equal {name: 'other name', age: 14}
 
     describe '#hasChanges', () ->
         it 'should return false if nothing was changed', () ->

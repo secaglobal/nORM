@@ -74,6 +74,8 @@ describe '@SQLDataRequest', () ->
             builder = @proxy.perform.args[0][0]
             expect(builder.hasMeta(MysqlQueryBuilder.META__TOTAL_COUNT)).be.ok
 
+
+
     describe '#save', () ->
         it 'should perfotm save for all changed models', () ->
             updateQuery1 = @queryBuilder.setTable(Person.schema.name).updateFields({name: 'jako1'}).setFilters(id: 4).compose()

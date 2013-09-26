@@ -1,5 +1,5 @@
 DBDataRequest = require './db-data-request'
-Collection = require './collection'
+SyncedCollection = require './synced-collection'
 SQLQueryBuilder = require './sql-query-builder'
 _ = require 'underscore'
 Q = require 'q'
@@ -67,7 +67,7 @@ class SQLDataRequest extends DBDataRequest
 
         ids = _.uniq _.compact models.pluck fieldName
 
-        return new Collection(
+        return new SyncedCollection(
             model: relationClass,
             filters: {id: {$in: ids}},
             fields: fields
@@ -89,7 +89,7 @@ class SQLDataRequest extends DBDataRequest
         filters[fieldName] = {$in: ids}
 
 
-        return new Collection(
+        return new SyncedCollection(
             model: relationClass,
             filters: filters,
             fields: fields
@@ -99,7 +99,7 @@ class SQLDataRequest extends DBDataRequest
 
                 filters = {}
                 filters[fieldName] = m.id
-                m[relation] = new Collection col.where(filters), model: relationClass
+                m[relation] = new SyncedCollection col.where(filters), model: relationClass
 
     fillManyToManyRelation: (models, relation, fields) ->
         self = @
@@ -124,7 +124,7 @@ class SQLDataRequest extends DBDataRequest
             ids = _.uniq _.compact _.pluck rows, relationCrossField
             crossvalues = _.groupBy(rows, (v) -> v[mainCrossField])
 
-            return new Collection(
+            return new SyncedCollection(
                 model: relationModel,
                 filters: {id: {$in: ids}},
                 fields: fields
@@ -135,7 +135,7 @@ class SQLDataRequest extends DBDataRequest
 
                 mainId = m.id
                 options = {model: relationModel}
-                col = new Collection([], options)
+                col = new SyncedCollection([], options)
                 m[relation] = col
 
                 if not crossvalues[mainId]?

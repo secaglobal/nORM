@@ -14,7 +14,7 @@ describe '@Collection', () ->
     beforeEach () ->
         @collection = new Collection [], {
             model: Person,
-            fields: ['id'],
+            fields: ['id', 'tasks'],
             order: {id: -1},
             limit: 10,
             offset: 1,
@@ -60,6 +60,11 @@ describe '@Collection', () ->
             expect(col2.config.model).be.equal Person
             expect(col3.models.length).be.equal 0
             expect(col3.config.model).be.equal Person
+
+        it 'should not set synced with database state for all models', () ->
+            @collection.reset([{name: 'Phil'}, {name: 'Rex'}])
+
+            @collection.each (m) -> expect(m.isSyncedWithDB()).not.be.ok
 
     describe '#reset', () ->
         it 'should reset models with new list', () ->
@@ -201,6 +206,16 @@ describe '@Collection', () ->
             res.total = 0
             @deferred.resolve res
 
+        it 'should set synced with database state of every model', (done) ->
+            _this = @
+            @collection.load()
+                .then ()->
+                    _this.collection.each (m) -> expect(m.isSyncedWithDB()).be.ok
+                    done()
+                .fail done
+
+            @deferred.resolve([{id: 4}, {id: 5}])
+
     describe '#save', () ->
         beforeEach () ->
             @collection.reset [
@@ -238,6 +253,21 @@ describe '@Collection', () ->
                     expect(errors).isArray
                     done()
 
+        it 'should set synced with database state of every model', (done) ->
+            _this = @
+            @collection.reset [
+                {id: 1, name: 'lego'} ,
+                {name: 'trololo'}
+            ]
+
+            @collection.save()
+                .then ()->
+                    _this.collection.each (m) -> expect(m.isSyncedWithDB()).be.ok
+                    done()
+                .fail done
+
+            @deferred.resolve()
+
 
         describe '[recurcive=true]', () ->
             it 'should traverse all models dependant relations and save them', (done) ->
@@ -269,27 +299,6 @@ describe '@Collection', () ->
                         done()
                     .fail done
                 @deferred.resolve()
-#    describe '#_saveAffectingRelations', () ->
-#        it 'should pass all models to @DataRequest#save', () ->
-#            @collection.reset [
-#                {id: 1, name: 'lego', job: {title: 'dev'}, job:} ,
-#                {name: 'mike'}
-#            ]
-#            @collection.save()
-#
-#            @collection.getRequest().save.calledWith(@collection).should.be.ok
-#
-#        it 'should return promise', () ->
-#            expect(@collection.save()).to.be.deep.instanceof @deferred.promise.constructor
-#
-#        it 'should throw exception if validation has not been passed', () ->
-#            col = @collection.reset [
-#                {id: 1, name: 'lego'} ,
-#                {}
-#            ]
-#
-#            expect(() -> col.save()).to.throw()
-#            @collection.getRequest().save.called.should.be.not.ok
 
     describe '#delete', () ->
         it 'should pass all models to @DataRequest#delete', () ->
@@ -418,6 +427,13 @@ describe '@Collection', () ->
             @collection.remove(@collection.findWhere(name: 'Phil'))
             expect(@collection.length).be.equal 1
             expect(@collection.first().name).be.equal 'Rex'
+
+    describe '@setModelsSyncedWithDB', () ->
+        it 'should set synced with database state for all models', () ->
+            @collection.reset([{name: 'Phil'}, {name: 'Rex'}])
+            @collection.setModelsSyncedWithDB()
+
+            @collection.each (m) -> expect(m.isSyncedWithDB()).be.ok
 
 
 
