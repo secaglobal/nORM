@@ -42,6 +42,7 @@ describe '@SQLDataRequest', () ->
         )
 
         @models = @people.models
+        @people.setModelsSyncedWithDB()
 
         @tasks = new Collection([
             {id: 12, title: 'Copy paper'}

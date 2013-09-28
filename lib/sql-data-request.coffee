@@ -31,7 +31,7 @@ class SQLDataRequest extends DBDataRequest
 
         models.map (model) ->
             model.id or onInsert.push model
-            model.hasChanges() and model.id and onUpdate.push model
+            model.hasChanges(true) and model.id and onUpdate.push model
 
         @_updateModels(onUpdate, promises) if onUpdate.length
         @_insertModelsAndFillIds(onInsert, promises) if onInsert.length and fillId
@@ -227,7 +227,7 @@ class SQLDataRequest extends DBDataRequest
             promises.push \
                 @getProxy().perform \
                     @_builder(table)
-                    .updateFields(model.getChangedAttributes())
+                    .updateFields(model.getChangedAttributes(true))
                     .setFilters({id: model.id})
                     .compose()
 
