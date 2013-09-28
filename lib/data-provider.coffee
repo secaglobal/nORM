@@ -15,4 +15,8 @@ class DataProvider
         return proxy.createDataRequest model if proxy
         throw "Proxy not found"
 
-module.exports = new DataProvider;
+
+if not global.__normanDataProviderInst
+    global.__normanDataProviderInst = new DataProvider
+
+module.exports = global.__normanDataProviderInst
