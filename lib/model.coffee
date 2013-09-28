@@ -34,7 +34,7 @@ class Model extends IModel
         return res
 
     hasChanges: (sync = false) ->
-        !_.isEmpty @getChangedAttributes()
+        !_.isEmpty @getChangedAttributes(sync)
 
     getChangedAttributes: (sync = false) ->
         changes = {}

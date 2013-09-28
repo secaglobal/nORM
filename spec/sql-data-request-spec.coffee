@@ -129,6 +129,18 @@ describe '@SQLDataRequest', () ->
             expect(@request.save @people).to.be.instanceof Q.allSettled(
               []).constructor
 
+        it.only 'should perfotm save for all models that not synced with db', () ->
+            @people.setModelsSyncedWithDB(false)
+
+            updateQuery1 = @queryBuilder.setTable(Person.schema.name)
+                .updateFields({id: 4, name: 'jako', 'age': 20, jobId: 1})
+                .setFilters(id: 4)
+                .compose()
+
+            @request.save @people
+            
+            @proxy.perform.calledWith(updateQuery1).should.be.ok
+
     describe '#delete', () ->
         it 'should perfotm delete for all models that have id', () ->
             deleteQuery = @queryBuilder
