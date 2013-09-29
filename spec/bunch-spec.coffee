@@ -1,5 +1,5 @@
 MysqlProxy = require("#{LIBS_PATH}/mysql/proxy");
-Bunch = require("#{LIBS_PATH}/bunch");
+Bunch = require("#{LIBS_PATH}/collection/bunch");
 Q = require 'q'
 dataProvider = require("#{LIBS_PATH}/data-provider")
 

@@ -1,5 +1,5 @@
 Model = require("#{LIBS_PATH}/model");
-Collection = require("#{LIBS_PATH}/collection");
+Collection = require("#{LIBS_PATH}/collection/collection");
 SQLDataRequest = require("#{LIBS_PATH}/sql-data-request");
 Q = require 'q'
 Person = require('./models')['Person']
