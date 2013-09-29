@@ -3,7 +3,7 @@ Proxy = require("#{LIBS_PATH}/mysql/proxy");
 MysqlDataRequest = require("#{LIBS_PATH}/mysql/data-request");
 MysqlQueryBuilder = require("#{LIBS_PATH}/mysql/query-builder");
 Model = require("#{LIBS_PATH}/model");
-Collection = require("#{LIBS_PATH}/collection");
+Collection = require("#{LIBS_PATH}/collection/collection");
 Q = require 'q'
 
 models = require('./models')
@@ -129,7 +129,7 @@ describe '@SQLDataRequest', () ->
             expect(@request.save @people).to.be.instanceof Q.allSettled(
               []).constructor
 
-        it.only 'should perfotm save for all models that not synced with db', () ->
+        it 'should perfotm save for all models that not synced with db', () ->
             @people.setModelsSyncedWithDB(false)
 
             updateQuery1 = @queryBuilder.setTable(Person.schema.name)
@@ -413,5 +413,4 @@ describe '@SQLDataRequest', () ->
         it 'should return promise', () ->
             res = @request.saveManyToManyRelations(@models[0], @tasks, 'tasks')
             expect(res).to.be.instanceof Q.defer().promise.constructor
-
 

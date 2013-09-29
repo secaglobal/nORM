@@ -1,9 +1,9 @@
 _ = require 'underscore'
 Q = require 'q'
-Util = require './util'
-DataProvider = require './data-provider'
-Entity = require("./entity");
-IModel = require("./imodel");
+Util = require './../util'
+DataProvider = require './../data-provider'
+Entity = require("./../entity");
+IModel = require("./../imodel");
 
 class Collection extends Entity
     constructor: (models, @config = {}) ->
@@ -131,25 +131,30 @@ class Collection extends Entity
         @_request.setOffset(@config.offset) if @config.offset
         @_request.fillTotalCount() if @config.total
 
-        @_request.find(@config.model).then (rows)->
-            _this.total = rows.total if rows.total?
-            _this.reset rows
-            _this.setModelsSyncedWithDB()
-            _this._fillRelations()
+        @_request.find(@config.model)
+            .then (rows)->
+                _this.total = rows.total if rows.total?
+                _this.reset rows
+                _this.setModelsSyncedWithDB()
+                _this._fillRelations()
+            .then () ->
+                _this
 
     _fillRelations: () ->
         _this = @
-        promises = []
         deferred = Q.defer()
+        promises = []
         relations = @config.relations
         for relation, fields of relations
             promises.push(@_request.fillRelation(@, relation, fields)) if not @[relation]?
 
         Q.allSettled(promises).then (results) ->
+            resolve = true
             results.forEach (result) ->
                 if result.state isnt "fulfilled"
                     deferred.reject result.reason
-            deferred.resolve(_this)
+                    resolve = false
+            deferred.resolve(_this) if resolve
 
         deferred.promise
 
@@ -166,13 +171,19 @@ class Collection extends Entity
     save: (recursive = false) ->
         _this = @
         return @_sendRejectedPromise(errors) if not @validate(errors = [], recursive)
-        @_request.save(@).then () ->
-            _this.setModelsSyncedWithDB()
-            _this._saveRelations() if recursive
+        @_request.save(@)
+            .then () ->
+                _this.setModelsSyncedWithDB()
+                _this._saveRelations() if recursive
+            .then () ->
+                _this
 
     _saveRelations: () ->
+        _this = @
+        deferred = Q.defer()
         relations = @config.model.schema.dependentRelations
         fieldName = @config.model.schema.defaultFieldName
+        promises = []
 
         for model in @models
             id = model.id
@@ -181,7 +192,17 @@ class Collection extends Entity
 
                 if col?
                     col.each (i) ->i[fieldName] = id
-                    col.save(true)
+                    promises.push col.save(true)
+
+        Q.allSettled(promises).then (results) ->
+            resolve = true
+            results.forEach (result) ->
+                if result.state isnt "fulfilled"
+                    deferred.reject result.reason
+                    resolve = false
+            deferred.resolve(_this) if resolve
+
+        deferred.promise
 
     delete: () ->
         _this = @

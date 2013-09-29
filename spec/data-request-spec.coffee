@@ -1,5 +1,5 @@
 DataRequest = require("#{LIBS_PATH}/data-request");
-Collection = require("#{LIBS_PATH}/collection");
+Collection = require("#{LIBS_PATH}/collection/collection");
 Q = require 'q'
 
 models = require('./models')

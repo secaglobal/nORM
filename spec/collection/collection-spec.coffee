@@ -1,9 +1,9 @@
 MysqlProxy = require("#{LIBS_PATH}/mysql/proxy");
-Collection = require("#{LIBS_PATH}/collection");
+Collection = require("#{LIBS_PATH}/collection/collection");
 Q = require 'q'
-Person = require('./models')['Person']
-Car = require('./models')['Car']
-Job = require('./models')['Job']
+Person = require('./../models')['Person']
+Car = require('./../models')['Car']
+Job = require('./../models')['Job']
 
 dataProvider = require("#{LIBS_PATH}/data-provider")
 
@@ -240,6 +240,16 @@ describe '@Collection', () ->
         it 'should return promise', () ->
             expect(@collection.save()).to.be.deep.instanceof @deferred.promise.constructor
 
+        it 'should pass themself as first parameter of callback function', (done) ->
+            col = @collection
+            col.save()
+                .then (returnCol) ->
+                    expect(returnCol).be.equal col
+                    done()
+                .fail done
+
+            @deferred.resolve()
+
         it 'should fail if validation has not been passed', (done) ->
             col = @collection.reset [
                 {id: 1, name: 'lego'} ,
@@ -299,6 +309,8 @@ describe '@Collection', () ->
                         done()
                     .fail done
                 @deferred.resolve()
+
+            it 'should stop processing till all saves is completed (how to test?)'
 
     describe '#delete', () ->
         it 'should pass all models to @DataRequest#delete', () ->
