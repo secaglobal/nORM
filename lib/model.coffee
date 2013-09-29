@@ -2,7 +2,7 @@ Q = require 'q'
 _ = require 'underscore'
 Util = require './util'
 IModel = require("./imodel");
-Collection = require("./collection");
+Collection = require("./collection/collection");
 
 class Model extends IModel
     constructor: (attributes) ->

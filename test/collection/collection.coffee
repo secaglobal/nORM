@@ -1,9 +1,9 @@
 MysqlProxy = require "#{LIBS_PATH}/mysql/proxy"
 Model = require "#{LIBS_PATH}/model"
-Collection = require "#{LIBS_PATH}/collection"
+Collection = require "#{LIBS_PATH}/collection/collection"
 DataProvider = require "#{LIBS_PATH}/data-provider"
 
-Person = require('./models')['Person']
+Person = require('./../models')['Person']
 
 describe '@Collection', () ->
 

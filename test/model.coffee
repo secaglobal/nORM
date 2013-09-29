@@ -1,9 +1,4 @@
-#MysqlProxy = require "#{LIBS_PATH}/mysql/proxy"
-#Schema = require "#{LIBS_PATH}/schema"
-#VirtualSchema = require "#{LIBS_PATH}/virtual-schema"
-#Model = require "#{LIBS_PATH}/model"
-Collection = require "#{LIBS_PATH}/collection"
-#DataProvider = require "#{LIBS_PATH}/data-provider"
+Collection = require "#{LIBS_PATH}/collection/collection"
 
 Person = require('./models')['Person']
 
