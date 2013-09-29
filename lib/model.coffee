@@ -1,8 +1,9 @@
 Q = require 'q'
 _ = require 'underscore'
 Util = require './util'
-IModel = require("./imodel");
-Collection = require("./collection/collection");
+IModel = require "./imodel"
+Collection = require "./collection/collection"
+SlaveCollection = require "./collection/slave-collection"
 
 class Model extends IModel
     constructor: (attributes) ->
@@ -12,10 +13,14 @@ class Model extends IModel
         @_isSyncedWithDB = false
 
         for attr, value of attributes
+            attrConf = @self.schema.fields[attr]
+            attrType = attrConf and attrConf.type
+
             if _.isArray value
-                value = new Collection(value, {model: @self.schema.fields[attr].type})
-            else if Util.isHashMap(value) and @self.schema.fields[attr].type.prototype instanceof Model
-                value = new @self.schema.fields[attr].type value
+                colType = attrConf.dependent and SlaveCollection or Collection
+                value = new colType(value, {model: attrType})
+            else if Util.isHashMap(value) and attrType.prototype instanceof Model
+                value = new attrType value
 
             @[attr] = value
             @original[attr] = value
