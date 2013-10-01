@@ -3,7 +3,7 @@ Collection = require './collection'
 Exception = require '../exception'
 
 
-class Slave extends Collection
+class SlaveCollection extends Collection
     save: () ->
         super
             .then (col)->
@@ -17,5 +17,12 @@ class Slave extends Collection
             .then (col) ->
                 col.delete()
 
-module.exports = Slave
+    assignParentModel:  (model) ->
+        fieldName = model.constructor.schema.defaultFieldName
+        id = model.id
+        @each (i) -> i[fieldName] = id
+        @addFilter(fieldName, id)
+        @
+
+module.exports = SlaveCollection
 

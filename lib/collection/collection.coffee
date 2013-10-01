@@ -30,6 +30,10 @@ class Collection extends Entity
         @config.filters = filters
         @
 
+    addFilter: (name, value) ->
+        @config.filters = {} if not @config.filters?
+        @config.filters[name] = value
+
     setLimit: (limit) ->
         @config.limit = limit
         @
@@ -191,7 +195,7 @@ class Collection extends Entity
                 col = model[relation]
 
                 if col?
-                    col.each (i) ->i[fieldName] = id
+                    col.assignParentModel(model)
                     promises.push col.save(true)
 
         Q.allSettled(promises).then (results) ->

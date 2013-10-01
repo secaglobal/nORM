@@ -3,6 +3,7 @@ Collection = require("#{LIBS_PATH}/collection/collection");
 SlaveCollection = require("#{LIBS_PATH}/collection/slave-collection");
 Q = require 'q'
 Person = require('./../models')['Person']
+Car = require('./../models')['Car']
 
 dataProvider = require("#{LIBS_PATH}/data-provider")
 
@@ -70,6 +71,17 @@ describe '@Collection', () ->
 
             @deferred.resolve([])
 
+    describe '#assignParentModel', ()->
+        it 'should set parent id for all models', () ->
+            col = new SlaveCollection([{title: 'x'}], {model: Car})
+            col.assignParentModel(new Person({id: 7}))
+            expect(col.first()[Person.schema.defaultFieldName]).be.equal 7
+
+
+        it 'should set filter with parentId field', () ->
+            col = new SlaveCollection([{title: 'x'}], {model: Car})
+            col.assignParentModel(new Person({id: 7}))
+            expect(col.config.filters[Person.schema.defaultFieldName]).be.equal 7
 
 
 
