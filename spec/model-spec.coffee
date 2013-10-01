@@ -1,5 +1,6 @@
 Model = require("#{LIBS_PATH}/model");
 Collection = require("#{LIBS_PATH}/collection/collection");
+SlaveCollection = require("#{LIBS_PATH}/collection/slave-collection");
 SQLDataRequest = require("#{LIBS_PATH}/sql-data-request");
 Q = require 'q'
 Person = require('./models')['Person']
@@ -18,8 +19,6 @@ describe '@Model', () ->
         sinon.stub(Collection.prototype, 'save').returns @deferred.promise
         sinon.stub(Collection.prototype, 'delete').returns @deferred.promise
         sinon.spy(Person.schema, 'validate')
-        #sinon.spy(Model.prototype, 'deepSave')
-        #sinon.spy(Collection.prototype, 'deepSave')
 
     afterEach () ->
         Collection.prototype.require.restore()
@@ -42,6 +41,9 @@ describe '@Model', () ->
             expect(@stive.cars).instanceof Collection
             expect(@stive.cars.at(0).title).be.equal 'BMW'
             expect(@stive.cars.at(1).title).be.equal 'Lada'
+
+        it 'should use SlaveCollection for one-to-many relations', () ->
+            expect(@stive.cars).instanceof SlaveCollection
 
         it 'should save original values', () ->
             @stive.name = 'other name'
@@ -186,50 +188,7 @@ describe '@Model', () ->
         it 'should be possible to save recursively', () ->
             stive = new Person({});
             stive.save(true)
-            expect(Collection.prototype.save.calledWith(true)).be.ok;
-
-#    describe '#deepSave', () ->
-#        beforeEach () ->
-#
-#            @_person = new Person
-#                name: 'Rex',
-#                job:
-#                    id: 2,
-#                    title: 'developer',
-#                cars: [{id: 4, title: 'BMW'}]
-#
-#        it 'should use datarequest for saving', () ->
-#            @_person.deepSave();
-#            expect(SQLDataRequest.prototype.save.called).be.ok
-#            expect(SQLDataRequest.prototype.save.calledWith(new Collection([@_person]))).be.ok
-#
-#        it 'should save recursively', () ->
-#            @_person.deepSave()
-#            expect(@_person.job.deepSave.calledWith null, false).be.ok
-#            expect(@_person.cars.deepSave.calledWith null, false).be.ok
-#
-#        it 'should return itself as first argument', (done) ->
-#            stive = @_person
-#            stive.deepSave()
-#                .then (model) ->
-#                    expect(model).to.be.equal stive
-#                    done()
-#                .fail done
-#
-#            @deferred.resolve()
-#
-#        it 'should return promise', () ->
-#            expect(@_person.deepSave()).to.be.deep.instanceof @deferred.promise.constructor
-#
-#        it 'should fail if validation has not been passed', (done) ->
-#            stive = new Person name: 'Rex', job: {id: 2}, cars: [{id: 4}]
-#
-#            stive.deepSave()
-#                .then (model) ->
-#                    done('Expect to fail')
-#                .fail (errors) ->
-#                    expect(errors).isArray
-#                    done()
+            expect(Collection.prototype.save.calledWith(true)).be.ok
 
     describe '#delete', () ->
         it 'should use datarequest for delition', () ->
