@@ -47,6 +47,20 @@ describe '@Collection', () ->
 
             @deferred.resolve([{id: 76}])
 
+        it 'should delete all models if collection is empty', (done) ->
+            @collection.reset([]).save()
+            .then () ->
+                    expectedFilter = jobId: 4
+                    loadSpy = Collection.prototype.load
+                    expect(loadSpy.calledOnce).be.ok
+                    expect(Collection.prototype.delete.calledOnce).be.ok
+                    expect(loadSpy.firstCall.thisValue.config.filters).be.deep.equal expectedFilter
+                    expect(loadSpy.firstCall.thisValue.config.limit).be.undefined
+                    done()
+            .fail done
+
+            @deferred.resolve([{id: 76}])
+
         it 'should do not call delete if nothing to delete', (done) ->
             @collection.reset([{id: 5, name: 'A'}, {id: 6, name: 'B'}]).save()
             .then () ->
@@ -80,9 +94,6 @@ describe '@Collection', () ->
                     done()
 
             @deferred.resolve([])
-
-
-
 
     describe '#assignParentModel', ()->
         it 'should set parent id for all models', () ->
