@@ -12,10 +12,10 @@ class SlaveCollection extends Collection
                 if not _.isObject(filters) or _.isEmpty(filters)
                     throw new Exception 'SLAVE_COL__NO_FILTERS'
 
-                filters['id'] = $nin: col.pluck('id')
+                filters['id'] = $nin: col.pluck('id') if not col.isEmpty()
                 new Collection(filters: filters, model: col.config.model).load()
             .then (col) ->
-                col.delete() if col.length
+                col.delete() if not col.isEmpty()
 
     assignParentModel:  (model) ->
         fieldName = model.constructor.schema.defaultFieldName
