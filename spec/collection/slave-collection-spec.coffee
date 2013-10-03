@@ -45,6 +45,16 @@ describe '@Collection', () ->
                     done()
                 .fail done
 
+            @deferred.resolve([{id: 76}])
+
+        it 'should do not call delete if nothing to delete', (done) ->
+            @collection.reset([{id: 5, name: 'A'}, {id: 6, name: 'B'}]).save()
+            .then () ->
+                    expect(Collection.prototype.load.calledOnce).be.ok
+                    expect(Collection.prototype.delete.called).be.not.ok
+                    done()
+            .fail done
+
             @deferred.resolve([])
 
         it 'should save other objects', (done) ->
@@ -70,6 +80,9 @@ describe '@Collection', () ->
                     done()
 
             @deferred.resolve([])
+
+
+
 
     describe '#assignParentModel', ()->
         it 'should set parent id for all models', () ->

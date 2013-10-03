@@ -15,7 +15,7 @@ class SlaveCollection extends Collection
                 filters['id'] = $nin: col.pluck('id')
                 new Collection(filters: filters, model: col.config.model).load()
             .then (col) ->
-                col.delete()
+                col.delete() if col.length
 
     assignParentModel:  (model) ->
         fieldName = model.constructor.schema.defaultFieldName
