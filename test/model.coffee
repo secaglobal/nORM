@@ -98,6 +98,7 @@ describe '@Model', () ->
                     done()
                 .fail(done)
 
+
     describe 'Relations #required', () ->
         it 'should provide access to many-to-one relation', (done) ->
             persons = @persons

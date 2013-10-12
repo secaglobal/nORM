@@ -29,6 +29,7 @@ class Person extends Model
         job: Job,
         tasks: [[Task]],
         cars: [Car],
+        jobTitle: () -> this.require('job').then (m) -> m.job.title
 
 module.exports =
     Job: Job,

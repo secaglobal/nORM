@@ -173,5 +173,14 @@ describe '@Collection', () ->
                 .fail(done)
 
 
+        it.only 'should fill pseudo-fields after relations are loaded', (done) ->
+            new Collection({model: Person, fields: ['jobTitle']}).load()
+            .then (col) ->
+                    expect(col.findWhere({name: 'Marge'}).jobTitle).be.equal 'Programmer'
+                    expect(col.findWhere({name: 'Mike'}).jobTitle).be.equal 'Sales'
+                    done()
+            .fail(done)
+
+
 
 

@@ -159,7 +159,7 @@ class Collection extends Entity
                 res = @config.model.schema.fields[field].type.call(model);
 
                 if Q.isPromiseAlike res
-                    promises.push res.then(value) -> model[field] = value
+                    promises.push res.then model.getValueSetter(field)
                 else
                     model[field] = res
 
@@ -172,7 +172,6 @@ class Collection extends Entity
             deferred.resolve(_this) if resolve
 
         deferred.promise
-
 
     _fillRelations: () ->
         _this = @

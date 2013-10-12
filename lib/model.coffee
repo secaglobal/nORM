@@ -71,4 +71,8 @@ class Model extends IModel
     @getProxyAlias: () ->
         return @schema.proxy
 
+    getValueSetter: (field) ->
+        _this = @
+        (value) -> _this[field] = value
+
 module.exports = Model;
