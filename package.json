@@ -1,7 +1,7 @@
 {
   "name": "norman",
   "description": "Node.js ORM",
-  "version": "0.2.10",
+  "version": "0.2.11",
   "author": {
     "name": "Sergey Levandovskiy",
     "email": "levandovskiy.s@gmail.com"

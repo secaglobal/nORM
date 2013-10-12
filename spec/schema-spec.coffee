@@ -1,6 +1,7 @@
 Schema = require("#{LIBS_PATH}/schema");
 Model = require("#{LIBS_PATH}/model");
 Validator = require("#{LIBS_PATH}/validator");
+_ = require 'underscore'
 
 Person = require('./models')['Person']
 
@@ -22,8 +23,8 @@ describe '@Schema', () ->
     describe '#constructor', () ->
         it 'should handle simple structure', () ->
             schema = new Schema 'Car', title: {type: String}, nr:  {type: Number}, owner: {type: Person}
-            expect(schema.fields.title).be.deep.equal {type: String, external: false}
-            expect(schema.fields.nr).be.deep.equal {type: Number, external: false}
+            expect(schema.fields.title).be.deep.equal {type: String}
+            expect(schema.fields.nr).be.deep.equal {type: Number}
             expect(schema.fields.owner).be.deep.equal {type: Person, external: true}
 
         it 'should handle types', () ->
@@ -32,13 +33,17 @@ describe '@Schema', () ->
                 type: String,
                 dependent: false
                 external: false,
-                collection: false
+                collection: false,
+                m2m: false,
+                pseudo: false
 
             expect(schema.fields.nr).be.deep.equal
                 type: Number,
                 external: false,
                 dependent: false,
-                collection: false
+                collection: false,
+                m2m: false,
+                pseudo: false
 
         it 'should handle collections', () ->
             schema = new Schema 'Car', parts: [Number]
@@ -46,7 +51,9 @@ describe '@Schema', () ->
                 type: Number,
                 collection: true,
                 external: false,
-                dependent: true
+                dependent: true,
+                pseudo: false,
+                m2m: false
 
         it 'should handle Many-to-Many relations', () ->
             schema = new Schema 'Car', parts: [[String]]
@@ -55,7 +62,8 @@ describe '@Schema', () ->
                 m2m: true,
                 collection: true,
                 external: false,
-                dependent: false
+                dependent: false,
+                pseudo: false
 
         it 'should handler _proxy attribute', () ->
             schema = new Schema 'Car', _proxy: 'proxy'
@@ -83,9 +91,20 @@ describe '@Schema', () ->
 
             expect(schema.dependentRelations).be.deep.equal ['someone']
 
+        it 'should keep separate names for dependant pseudo fields', () ->
+            schema = new Schema 'Car',
+                title: String,
+                owner: Person,
+                masterName: () -> this.master.name
+
+            expect(schema.pseudoFields).be.deep.equal ['masterName']
+
     describe '#validate', () ->
-        it 'should skip collection, type, dependent and external fields', () ->
-            schema = new Schema 'Car', name: {type: String, collection: false, external: false, dependent: true}
+        it 'should skip collection, type, dependent, pseudo and external fields', () ->
+            schema = new Schema 'Car', name: {
+                type: String, pseudo: false, collection: false,
+                external: false, dependent: true
+            }
             expect(schema.validate({name: 'Valery'})).be.equal true
 
         it 'should execute all validators', () ->
