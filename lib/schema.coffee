@@ -6,6 +6,7 @@ Validator = require './validator'
 class Schema
     constructor: (@name, structure) ->
         @fields = {id: {type: Number}}
+        @pseudoFields = []
         @relations = []
         @dependentRelations = []
         @keys = []
@@ -13,31 +14,46 @@ class Schema
         @defaultFieldName = Util.lcfirst(name) + 'Id'
 
     _applyAttr: (attr, value) ->
+        attrConf =
+            type: value,
+            dependent: false,
+            collection: false,
+            pseudo: false,
+            m2m: false,
+            external: false
 
         if attr is '_proxy'
             @proxy = value
             return
         else if _.isArray(value)
+            attrConf.collection = true
+
             if  _.isArray(value[0])
-                @fields[attr] =
-                    type: value[0][0],
-                    m2m: true,
-                    collection: true,
-                    dependent: false
+                attrConf.type = value[0][0]
+                attrConf.m2m = true
             else
-                @fields[attr] = {type: value[0], collection: true, dependent: true}
-        else if _.isFunction(value) #if model
-            @fields[attr] = {type: value, dependent: false, collection: false}
-        else
-            @fields[attr] = value
+                attrConf.type = value[0]
+                attrConf.dependent = true
+        else if Util.isHashMap(value)
+            attrConf = value
+        else if @_isPseudoField value
+            attrConf.pseudo = true
 
-        @fields[attr].external = @fields[attr].type.prototype instanceof Model
 
-        if not (@fields[attr].type.prototype instanceof Model)
-            @keys.push attr
-        else
+        if _.isFunction(attrConf.type) and attrConf.type.prototype instanceof Model
+            attrConf.external = true
             @relations.push attr
-            @dependentRelations.push attr if @fields[attr].dependent
+            @dependentRelations.push attr if attrConf.dependent
+        else if attrConf.pseudo
+            @pseudoFields.push attr
+        else
+            @keys.push attr
+
+        @fields[attr] = attrConf
+
+    _isPseudoField: (value) ->
+        _.isFunction(value) and not (value.prototype instanceof Model) and not
+            (value is String or value is Number or value is Date)
 
     getProxy: () ->
         @
@@ -64,7 +80,7 @@ class Schema
                 continue
 
             for validator, params of config
-                if validator in ['collection', 'm2m', 'external', 'dependent']
+                if validator in ['collection', 'm2m', 'external', 'dependent', 'pseudo']
                     continue
 
                 validatorRes = true

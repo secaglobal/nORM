@@ -15,9 +15,9 @@ describe '@Collection', () ->
                 {id: 3, name: 'Marge', age: 30, jobId: 3},
             ],
             Job: [
-                {id: 1, title: 'Sales', salary: 100},
-                {id: 2, title: 'Admin', salary: 200},
-                {id: 3, title: 'Programmer', salary: 300},
+                {id: 1, title: 'Sales', salary: 100, countryId: 2},
+                {id: 2, title: 'Admin', salary: 200, countryId: 1},
+                {id: 3, title: 'Programmer', salary: 300, countryId: 2},
             ],
             Task: [
                 {id: 1, title: 'Draw template'},
@@ -36,6 +36,10 @@ describe '@Collection', () ->
                 {id: 2, title: 'Nissan', personId: 2},
                 {id: 3, title: 'Toyota', personId: 3},
                 {id: 4, title: 'Audi', personId: 2},
+            ],
+            Country: [
+                {id: 1, title: 'Ukraine'},
+                {id: 2, title: 'USA'},
             ]
         }).then(() -> done()).fail(done)
 
@@ -154,6 +158,17 @@ describe '@Collection', () ->
                     expect(model).be.ok
                     expect(model.cars).be.ok
                     expect(model.tasks).be.ok
+                    done()
+                .fail(done)
+
+        it 'bug: fail if relation positioned after second-level relation', (done) ->
+            new Collection([], {model: Person, fields: ['job', 'job.country', 'cars']}).load()
+                .then (col) ->
+                    model = col.findWhere(name: 'Denis')
+                    expect(model).be.ok
+                    expect(model.cars).be.ok
+                    expect(model.job).be.ok
+                    expect(model.job.country).be.ok
                     done()
                 .fail(done)
 

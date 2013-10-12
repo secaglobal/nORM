@@ -141,6 +141,22 @@ describe '@Collection', () ->
                 {id: 4}
             ])
 
+        it 'should fill all pseudo fields', (done) ->
+            col = @collection
+
+            col.setFields('name','job', 'tasks.id', 'stateNice').load()
+                .then (col)->
+                    model = col.first()
+                    expect(model.stateNice).be.not.undefined
+                    expect(model.stateNice).be.equal model.getStateNice()
+                    done()
+                .fail done
+
+
+            @deferred.resolve([
+                {id: 4}
+            ])
+
         it 'should use required fields', ()->
             @collection.load()
             @collection.getRequest().setFields.called.should.be.ok
@@ -402,6 +418,11 @@ describe '@Collection', () ->
             expect(@collection.config.relations).be.deep.equal
                 job : [],
                 tasks : ['title']
+
+        it 'bug: uses fields of another relation if relation positioned after sub-relation', () ->
+            @collection.setFields 'job', 'job.country', 'cars'
+            expect(@collection.config.relations['job']).be.eql ['country']
+            expect(@collection.config.relations['cars']).be.eql []
 
     describe '#validete', () ->
         it 'should validate models', () ->

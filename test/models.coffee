@@ -1,10 +1,16 @@
 Model = require("#{LIBS_PATH}/model");
 Schema = require("#{LIBS_PATH}/schema");
 
+class Country extends Model
+    @schema: new Schema 'Country',
+        title: String
+
 class Job extends Model
     @schema: new Schema 'Job',
         title: String,
-        salary: Number
+        salary: Number,
+        countryId: Number,
+        country: Country
 
 class Task extends Model
     @schema: new Schema 'Task',

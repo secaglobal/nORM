@@ -1,11 +1,16 @@
 Model = require("#{LIBS_PATH}/model");
 Schema = require("#{LIBS_PATH}/schema");
 
+class Country extends Model
+    @schema: new Schema 'Country',
+        title: String
+
 class Job extends Model
     @schema: new Schema 'Job',
-        id: Number
-        title: {type: String, require: true},
-        salary: Number
+        title: String,
+        salary: Number,
+        countryId: Number,
+        country: Country
 
 class Task extends Model
     @schema: new Schema 'Task',
@@ -27,7 +32,18 @@ class Person extends Model
         job: Job,
         tasks: [[Task]],
         cars: [Car],
+        stateNice: () -> this.getStateNice()
         _proxy: 'test1'
+
+    constructor: () ->
+        super
+        @_state = 'inspired'
+
+    getStateNice: () ->
+        @_state
+
+    setStateNice: (@_state) ->
+
 
 module.exports =
     Job: Job,

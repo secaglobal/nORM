@@ -17,6 +17,7 @@ class Collection extends Entity
             @config.model = models[0].self
 
         @config.relations = {} # must lead #setFields
+        @config.pseudoFields = [] # must lead #setFields
         @setFields(@config.fields) if @config.fields
 
         @reset(models) if models.length
@@ -53,6 +54,7 @@ class Collection extends Entity
         schemaFields = @config.model.schema.fields
 
         for field in fields
+            subfield = false
             if (ind = field.indexOf('.')) > 0
                 subfield = field.substring(ind + 1);
                 field = field.substring(0, ind);
@@ -61,9 +63,10 @@ class Collection extends Entity
                 if not @config.relations[field]
                     @config.relations[field] = []
                 @config.relations[field].push subfield if subfield
+            else if schemaFields[field].pseudo
+                @config.pseudoFields.push field
             else
                 @config.fields.push field
-
         @
 
     reset: (@models) ->
@@ -141,8 +144,35 @@ class Collection extends Entity
                 _this.reset rows
                 _this.setModelsSyncedWithDB()
                 _this._fillRelations()
+            .then ()->
+                _this._fillPseudoFields()
             .then () ->
                 _this
+
+    _fillPseudoFields: () ->
+        _this = @
+        deferred = Q.defer()
+        promises = []
+        fields = @config.pseudoFields
+        for model in @models
+            for field in fields
+                res = @config.model.schema.fields[field].type.call(model);
+
+                if Q.isPromiseAlike res
+                    promises.push res.then(value) -> model[field] = value
+                else
+                    model[field] = res
+
+        Q.allSettled(promises).then (results) ->
+            resolve = true
+            results.forEach (result) ->
+                if result.state isnt "fulfilled"
+                    deferred.reject result.reason
+                    resolve = false
+            deferred.resolve(_this) if resolve
+
+        deferred.promise
+
 
     _fillRelations: () ->
         _this = @
@@ -220,5 +250,6 @@ class Collection extends Entity
         deferred = Q.defer()
         deferred.reject(errors)
         return deferred.promise
+
 module.exports = Collection
 
