@@ -17,8 +17,20 @@ class SQLQueryBuilder
         $in: ' in',
         $nin: ' not in',
 
+        '#eq': '=',
+        '#ne': '!=',
+        '#gt': '>',
+        '#gte': '>=',
+        '#lt': '<',
+        '#lte': '<=',
+        '#in': ' in',
+        '#nin': ' not in',
+
     @_logicalOperators =
         $or: 'or',
         $and: 'and'
+
+        '#or': 'or',
+        '#and': 'and'
 
 module.exports = SQLQueryBuilder;
